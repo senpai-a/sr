@@ -45,6 +45,10 @@ if h.shape[-1]!=filterSize:
     print('extended=',exQ,'filter size is',h.shape[-1])
     exit()
 
+if args.groundTruth:
+    classError = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
+    classCount = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
+
 # Matrix preprocessing
 # Preprocessing normalized Gaussian matrix W for hashkey calculation
 weighting = gaussian2d([gradientsize, gradientsize], 2)
@@ -66,9 +70,14 @@ for image in imagelist:
     # Extract only the luminance in YCbCr
     ycrcv = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     
-    # Downscale (bicubic interpolation)
+    # Downscale (spline)
     if args.groundTruth:
-        height, width = ycrcv[:,:,0].shape        
+        height, width = ycrcv[:,:,0].shape
+        if height%2==1:
+            height-=1
+        if width%2==1:
+            width-=1
+        ycrcv = ycrcv[0:height,0:width,:]
         ycrcvorigin=np.zeros((floor((height+1)/2),floor((width+1)/2),3))
         ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
         ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
@@ -116,6 +125,11 @@ for image in imagelist:
             # Get pixel type
             pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
             predictHR[row-margin,col-margin] = patch.dot(h[angle,strength,coherence,pixeltype])
+            if args.groundTruth:
+                pixelerror=ycrcv[row,col,0].astype('float')/255.-predictHR[row-margin,col-margin].astype('float')
+                classCount[angle,strength,coherence,pixeltype]+=1
+                classError[angle,strength,coherence,pixeltype]+=pixelerror*pixelerror
+
     # Scale back to [0,255]
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
     # Bilinear interpolation on CbCr field
@@ -155,6 +169,11 @@ for image in imagelist:
         ax = fig.add_subplot(1, 4, 4)
         ax.imshow(result, interpolation='none')
         plt.show()
+
+with open('results/'+ args.output + '/classCount.p','wb') as f:
+    pickle.dump(classCount,f)
+with open('results/'+ args.output + '/classError.p','wb') as f:
+    pickle.dump(classError,f)
 
 print('\r', end='')
 print(' ' * 60, end='')

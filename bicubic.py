@@ -32,8 +32,14 @@ for parent, dirnames, filenames in os.walk('test'):
 for image in imagelist:
     origin = cv2.imread(image)
     ycrcv = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
+
     if args.groundTruth:
-        height, width = ycrcv[:,:,0].shape        
+        height, width = ycrcv[:,:,0].shape
+        if height%2==1:
+            height-=1
+        if width%2==1:
+            width-=1
+        ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((floor((height+1)/2),floor((width+1)/2),3))
         ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
         ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
@@ -67,6 +73,7 @@ for image in imagelist:
     interp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='linear')
     result[:,:,2] = interp(widthgridHR, heightgridHR)
 
+    result=np.clip(result.astype('float'),0.,255.)
     result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
     try:
         os.mkdir('results/'+ args.output)

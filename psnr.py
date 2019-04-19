@@ -41,15 +41,21 @@ error=0.
 for i in range(len(gtlist)):
     gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
     sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    gth,gtw=gt.shape
+    if gth%2==1:
+        gth-=1
+    if gtw%2==1:
+        gtw-=1
+    gt=gt[0:gth,0:gtw]
     if gt.shape!=sr.shape:
         print('dimensions do not match on image:',gtlist[i],srlist[i])
+        print(gt.shape,sr.shape)
         continue
-    w,h=gt.shape
     gt=gt.astype('float')/255.
     sr=sr.astype('float')/255.
     err=np.power(gt-sr,2)
     error+=np.sum(err)
-    pixelcount+=w*h
+    pixelcount+=gtw*gth
 mse=error/pixelcount
 psnr=-10*np.log10(mse)
 print("PSNR=",psnr)
