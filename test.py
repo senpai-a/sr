@@ -21,7 +21,6 @@ gradientsize = 9
 Qangle = 24
 Qstrength = 3
 Qcoherence = 3
-trainpath = 'test'
 
 if exQ:
     filterSize=patchsize*patchsize+3
@@ -53,7 +52,7 @@ weighting = np.diag(weighting.ravel())
 
 # Get image list
 imagelist = []
-for parent, dirnames, filenames in os.walk(trainpath):
+for parent, dirnames, filenames in os.walk('test'):
     for filename in filenames:
         if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif', '.tiff')):
             imagelist.append(os.path.join(parent, filename))
