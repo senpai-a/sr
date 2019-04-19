@@ -217,7 +217,10 @@ for pixeltype in range(0, R*R):
                 h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype], V[angle,strength,coherence,pixeltype])
 
 # Write filter to file
-with open("filter.p", "wb") as fp:
+of="filter.p"
+if args.output:
+    of=args.output
+with open(of, "wb") as fp:
     pickle.dump(h, fp)
 
 # Plot the learned filters
