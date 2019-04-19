@@ -12,7 +12,7 @@ def hashkey(block, Qangle, W):
     # SVD calculation
     G = np.vstack((gx,gy)).T
     GTWG = G.T.dot(W).dot(G)
-    w, v = np.linalg.eig(GTWG);
+    w, v = np.linalg.eig(GTWG)
 
     # Make sure V and D contain only real numbers
     nonzerow = np.count_nonzero(np.isreal(w))
@@ -64,4 +64,4 @@ def hashkey(block, Qangle, W):
     elif angle < 0:
         angle = 0
 
-    return angle, strength, coherence
+    return angle, strength, coherence, theta, lamda, u
