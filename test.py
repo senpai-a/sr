@@ -9,6 +9,7 @@ from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
+from skimage import transform
 
 args = gettestargs()
 exQ=args.extended
@@ -64,12 +65,25 @@ for image in imagelist:
     print('\rUpscaling image ' + str(imagecount) + ' of ' + str(len(imagelist)) + ' (' + image + ')')
     origin = cv2.imread(image)
     # Extract only the luminance in YCbCr
-    ycrcvorigin = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
+    ycrcv = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
+    
+    # Downscale (bicubic interpolation)
+    if args.groundTruth:
+        height, width = ycrcv[:,:,0].shape        
+        ycrcvorigin=np.zeros((floor((height+1)/2),floor((width+1)/2),3))
+        ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
+        ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
+        ycrcvorigin[:,:,2] = transform.resize(ycrcv[:,:,2], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
+        ycrcvorigin=np.uint8(np.clip(ycrcvorigin.astype('float')*255.,0.,255.))
+    else:
+        ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     grayorigin = ycrcvorigin[:,:,0]
+
     # Normalized to [0,1]
     grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
+    
     # Upscale (bilinear interpolation)
-    heightLR, widthLR = grayorigin.shape
+    heightLR, widthLR = grayorigin.shape    
     heightgridLR = np.linspace(0,heightLR-1,heightLR)
     widthgridLR = np.linspace(0,widthLR-1,widthLR)
     bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, grayorigin, kind='linear')
@@ -77,6 +91,7 @@ for image in imagelist:
     widthgridHR = np.linspace(0,widthLR-0.5,widthLR*2)
     upscaledLR = bilinearinterp(widthgridHR, heightgridHR)
     # Calculate predictHR pixels
+    
     heightHR, widthHR = upscaledLR.shape
     predictHR = np.zeros((heightHR-2*margin, widthHR-2*margin))
     operationcount = 0
@@ -106,18 +121,28 @@ for image in imagelist:
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
     # Bilinear interpolation on CbCr field
     result = np.zeros((heightHR, widthHR, 3))
+
     y = ycrcvorigin[:,:,0]
     bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='linear')
     result[:,:,0] = bilinearinterp(widthgridHR, heightgridHR)
+    
     cr = ycrcvorigin[:,:,1]
     bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='linear')
     result[:,:,1] = bilinearinterp(widthgridHR, heightgridHR)
+
     cv = ycrcvorigin[:,:,2]
     bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='linear')
     result[:,:,2] = bilinearinterp(widthgridHR, heightgridHR)
+
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR
     result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
-    cv2.imwrite('results/' + os.path.splitext(os.path.basename(image))[0] + '_result.bmp', cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
+    try:
+        os.mkdir('results/'+ args.output)
+    except Exception as e:
+        pass#print("\nignoring error:",e)
+
+    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.bmp',
+     cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
     imagecount += 1
     # Visualizing the process of RAISR image upscaling
     if args.plot:

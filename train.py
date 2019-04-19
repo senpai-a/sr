@@ -151,8 +151,8 @@ for image in imagelist:
                     
                     patch_=np.zeros(filterSize)
                     patch_=patch.dot(P[:,:,i-1])
-                    f=np.matrix([newtheta,lamda,u])                    
-                    patch_=np.concatenate((patch_,f),axis=None)
+                    f=np.array([newtheta,lamda,u])                    
+                    patch_=np.concatenate((np.array(patch_),f),axis=None)
                     patch_=np.matrix(patch_)
                     ATA=np.dot(patch_.T,patch_)
                     ATb=np.dot(patch_.T,pixelHR)
