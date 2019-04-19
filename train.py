@@ -27,7 +27,7 @@ trainpath = 'train'
 exQ=args.extended
 filterSize=patchsize*patchsize
 if exQ:
-    filterSize = filterSize + 3
+    filterSize = filterSize + 4
     print("Training Extended Linear Mappings\n")
 
 # Calculate the margin
@@ -151,7 +151,7 @@ for image in imagelist:
                     
                     patch_=np.zeros(filterSize)
                     patch_=patch.dot(P[:,:,i-1])
-                    f=np.array([newtheta,lamda,u])                    
+                    f=np.array([newtheta,lamda,u,1.])                    
                     patch_=np.concatenate((np.array(patch_),f),axis=None)
                     patch_=np.matrix(patch_)
                     ATA=np.dot(patch_.T,patch_)

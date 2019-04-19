@@ -23,7 +23,7 @@ Qstrength = 3
 Qcoherence = 3
 
 if exQ:
-    filterSize=patchsize*patchsize+3
+    filterSize=patchsize*patchsize+4
 else:
     filterSize=patchsize*patchsize
 
@@ -112,7 +112,7 @@ for image in imagelist:
             # Calculate hashkey
             angle, strength, coherence, theta, lamda, u = hashkey(gradientblock, Qangle, weighting)
             if exQ:
-                patch = np.concatenate((patch,np.array([theta,lamda,u])),axis=None)
+                patch = np.concatenate((patch,np.array([theta,lamda,u,1.])),axis=None)
             # Get pixel type
             pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
             predictHR[row-margin,col-margin] = patch.dot(h[angle,strength,coherence,pixeltype])
