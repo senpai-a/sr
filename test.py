@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from scipy import interpolate
 
 args = gettestargs()
+exQ=args.extended
 
 # Define parameters
 R = 2
@@ -20,6 +21,11 @@ Qangle = 24
 Qstrength = 3
 Qcoherence = 3
 trainpath = 'test'
+
+if exQ:
+    filterSize=patchsize*patchsize+3
+else:
+    filterSize=patchsize*patchsize
 
 # Calculate the margin
 maxblocksize = max(patchsize, gradientsize)
@@ -33,6 +39,11 @@ if args.filter:
     filtername = args.filter
 with open(filtername, "rb") as fp:
     h = pickle.load(fp)
+
+if h.shape[-1]!=filterSize:
+    print('Error: filter size does not match.')
+    print('extended=',exQ,'filter size is',h.shape[-1])
+    exit()
 
 # Matrix preprocessing
 # Preprocessing normalized Gaussian matrix W for hashkey calculation
@@ -85,7 +96,9 @@ for image in imagelist:
             # Get gradient block
             gradientblock = upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
             # Calculate hashkey
-            angle, strength, coherence = hashkey(gradientblock, Qangle, weighting)
+            angle, strength, coherence, theta, lamda, u = hashkey(gradientblock, Qangle, weighting)
+            if exQ:
+                patch = np.concatenate((patch,np.array([theta,lamda,u])),axis=None)
             # Get pixel type
             pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
             predictHR[row-margin,col-margin] = patch.dot(h[angle,strength,coherence,pixeltype])
