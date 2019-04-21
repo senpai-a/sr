@@ -30,8 +30,7 @@ for parent, dirnames, filenames in os.walk(args.sr):
         if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif', '.tiff')):
             srlist.append(os.path.join(parent, filename))
 
-print(gtlist)
-print(srlist)
+print(np.matrix([gtlist,srlist]).T)
 if len(gtlist)!=len(srlist):
     print('error:file number does not match')
     exit()
@@ -51,11 +50,11 @@ for i in range(len(gtlist)):
         print('dimensions do not match on image:',gtlist[i],srlist[i])
         print(gt.shape,sr.shape)
         continue
-    gt=gt.astype('float')/255.
-    sr=sr.astype('float')/255.
+    gt=gt.astype('float')#/255.
+    sr=sr.astype('float')#/255.
     err=np.power(gt-sr,2)
     error+=np.sum(err)
     pixelcount+=gtw*gth
 mse=error/pixelcount
-psnr=-10*np.log10(mse)
+psnr=20*np.log10(255)-10*np.log10(mse)
 print("PSNR=",psnr)
