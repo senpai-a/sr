@@ -25,12 +25,12 @@ gl=[]
 sl=[]
 for parent, dirnames, filenames in os.walk(args.gt):
     for filename in filenames:
-        if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif')):
+        if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.pbm', '.pgm', '.ppm', '.tif')):
             gtlist.append(os.path.join(parent, filename))
             gl.append(filename[:-4])
 for parent, dirnames, filenames in os.walk(args.sr):
     for filename in filenames:
-        if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif')):
+        if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.pbm', '.pgm', '.ppm', '.tif')):
             srlist.append(os.path.join(parent, filename))
             sl.append(filename[:-4])
 
