@@ -96,7 +96,12 @@ for image in imagelist:
     grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
     # Downscale (bicubic interpolation)
     height, width = grayorigin.shape
-    LR = transform.resize(grayorigin, (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
+    if height%2==1:
+        height-=1
+    if width%2==1:
+        width-=1
+    grayorigin=grayorigin[0:height,0:width]
+    LR = transform.resize(grayorigin, (int(height/2),int(width/2)), order=3, mode='reflect', anti_aliasing=False)
     # Upscale (bilinear interpolation)
     height, width = LR.shape
     heightgrid = np.linspace(0, height-1, height)

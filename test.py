@@ -55,8 +55,12 @@ weighting = gaussian2d([gradientsize, gradientsize], 2)
 weighting = np.diag(weighting.ravel())
 
 # Get image list
+tpath = 'test'
+if args.input:
+    tpath = args.input
+
 imagelist = []
-for parent, dirnames, filenames in os.walk('test'):
+for parent, dirnames, filenames in os.walk(tpath):
     for filename in filenames:
         if filename.lower().endswith(('.bmp', '.dib', '.png', '.jpg', '.jpeg', '.pbm', '.pgm', '.ppm', '.tif', '.tiff')):
             imagelist.append(os.path.join(parent, filename))
@@ -70,18 +74,18 @@ for image in imagelist:
     # Extract only the luminance in YCbCr
     ycrcv = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     
-    # Downscale (spline)
+    # Downscale
     if args.groundTruth:
         height, width = ycrcv[:,:,0].shape
         if height%2==1:
             height-=1
         if width%2==1:
             width-=1
-        ycrcv = ycrcv[0:height,0:width,:]
-        ycrcvorigin=np.zeros((floor((height+1)/2),floor((width+1)/2),3))
-        ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,2] = transform.resize(ycrcv[:,:,2], (floor((height+1)/2),floor((width+1)/2)), mode='reflect', anti_aliasing=False)
+        ycrcv = ycrcv[0:height,0:width,:]   
+        ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
+        ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
+        ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
+        ycrcvorigin[:,:,2] = transform.resize(ycrcv[:,:,2], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
         ycrcvorigin=np.uint8(np.clip(ycrcvorigin.astype('float')*255.,0.,255.))
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)

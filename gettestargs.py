@@ -7,6 +7,7 @@ def gettestargs():
      action="store_true")
     parser.add_argument("-e", "--extended", help="Use Extended Linear Mapping", action="store_true")
     parser.add_argument("-o", "--output", help="output folder name")
+    parser.add_argument("-i", "--input", help="input folder name")
     parser.add_argument("-gt", "--groundTruth", help="Use test images as ground truth (down scale them first)",
     action="store_true")
     args = parser.parse_args()
