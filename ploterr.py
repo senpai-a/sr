@@ -6,10 +6,10 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
-err1 = 'results/raisr_100/classError.p'
-len1 = 'results/raisr_100/classCount.p'
-err2 = 'results/Ex2_100/classError.p'
-len2 = 'results/Ex2_100/classCount.p'
+err1 = 'results/B200onB100/classError.p'
+len1 = 'results/B200onB100/classCount.p'
+err2 = 'results/B200onB100Ex/classError.p'
+len2 = 'results/B200onB100Ex/classCount.p'
 with open(err1,'rb') as f:
     err1 = pickle.load(f)
 with open(len1,'rb') as f:
