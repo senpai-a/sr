@@ -37,6 +37,7 @@ for parent, dirnames, filenames in os.walk(args.sr):
 #print(np.matrix([gtlist,srlist]).T)
 if len(gtlist)!=len(srlist):
     print('error:file number does not match')
+    print(gtlist,srlist)
     exit()
 
 pixelcount=0
@@ -45,15 +46,17 @@ for i in range(len(gtlist)):
     if gl[i]!=sl[i]:
         print('filename dose not match. Quiting.')
         exit()
-    gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
-    sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    #gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    #sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    gt=cv2.imread(gtlist[i])[:,:,0:3]
+    sr=cv2.imread(srlist[i])[:,:,0:3]
     gth,gtw=gt.shape
     if gt.shape!=sr.shape:
         if gth%2==1:
             gth-=1
         if gtw%2==1:
             gtw-=1
-        gt=gt[0:gth,0:gtw]
+        gt=gt[0:gth,0:gtw,:]
 
     if gt.shape!=sr.shape:
         print('dimensions do not match on image:',gtlist[i],srlist[i])

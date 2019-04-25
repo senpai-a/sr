@@ -6,10 +6,10 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
-err1 = 'results/B200onB100/classError.p'
-len1 = 'results/B200onB100/classCount.p'
-err2 = 'results/B200onB100Ex/classError.p'
-len2 = 'results/B200onB100Ex/classCount.p'
+err1 = 'results/t91onB100/classError.p'
+len1 = 'results/t91onB100/classCount.p'
+err2 = 'results/t91onB100Ex/classError.p'
+len2 = 'results/t91onB100Ex/classCount.p'
 with open(err1,'rb') as f:
     err1 = pickle.load(f)
 with open(len1,'rb') as f:
@@ -38,18 +38,19 @@ colorlist=np.vstack((neg(np.linspace(0.5, 1, nlvl)),
     pos(np.linspace(0, 1, plvl))))
 colormap=ListedColormap(colorlist)
 '''
-print(dmse[:,:,0,0])
+
+#print(dmse[:,:,0,0])
 i = 0
-fig,axs=plt.subplots(3,8,sharex=True, sharey=True)
+fig,axs=plt.subplots(3,4,sharex=True, sharey=True)
 for co in range(3):
     for pt in range(4):
         i+=1
-        ax1=axs[co,pt*2]
-        ax2=axs[co,pt*2+1]
-        plot1=ax1.matshow(pos[:,:,co,pt])
-        plot2=ax2.matshow(neg[:,:,co,pt],cmap='autumn')
-
-fig.colorbar(plot1,ax=[axs[:,7]],location='right',shrink = 0.5)
-fig.colorbar(plot2,ax=[axs[:,0]],location='left',shrink = 0.5)
+        ax1=axs[co,pt]
+        #ax2=axs[co,pt*2+1]
+        plot1=ax1.matshow(len1[:,:,co,pt])
+        #plot2=ax2.matshow(len2[:,:,co,pt],cmap='autumn')
+print(np.sum(len1),np.sum(len2))
+fig.colorbar(plot1,ax=[axs[:,3]],location='right',shrink = 0.5)
+#fig.colorbar(plot2,ax=[axs[:,0]],location='left',shrink = 0.5)
 
 plt.show()
