@@ -5,7 +5,6 @@ import os
 import pickle
 import sys
 from gaussian2d import gaussian2d
-from gettestargs import gettestargs
 from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
@@ -71,11 +70,11 @@ for image in imagelist:
     result[:,:,0] = interp(widthgridHR, heightgridHR)
     
     cr = ycrcvorigin[:,:,1]
-    interp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='linear')
+    interp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='cubic')
     result[:,:,1] = interp(widthgridHR, heightgridHR)
 
     cv = ycrcvorigin[:,:,2]
-    interp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='linear')
+    interp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='cubic')
     result[:,:,2] = interp(widthgridHR, heightgridHR)
 
     result=np.clip(result.astype('float'),0.,255.)

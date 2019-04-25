@@ -140,15 +140,15 @@ for image in imagelist:
     result = np.zeros((heightHR, widthHR, 3))
 
     y = ycrcvorigin[:,:,0]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='linear')
+    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='cubic')
     result[:,:,0] = bilinearinterp(widthgridHR, heightgridHR)
     
     cr = ycrcvorigin[:,:,1]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='linear')
+    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='cubic')
     result[:,:,1] = bilinearinterp(widthgridHR, heightgridHR)
 
     cv = ycrcvorigin[:,:,2]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='linear')
+    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='cubic')
     result[:,:,2] = bilinearinterp(widthgridHR, heightgridHR)
 
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR
