@@ -46,17 +46,17 @@ for i in range(len(gtlist)):
     if gl[i]!=sl[i]:
         print('filename dose not match. Quiting.')
         exit()
-    #gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
-    #sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
-    gt=cv2.imread(gtlist[i])[:,:,0:3]
-    sr=cv2.imread(srlist[i])[:,:,0:3]
-    (gth,gtw,ch)=gt.shape
+    gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    #gt=cv2.imread(gtlist[i])[:,:,0:3]
+    #sr=cv2.imread(srlist[i])[:,:,0:3]
+    (gth,gtw)=gt.shape
     if gt.shape!=sr.shape:
         if gth%2==1:
             gth-=1
         if gtw%2==1:
             gtw-=1
-        gt=gt[0:gth,0:gtw,:]
+        gt=gt[0:gth,0:gtw]
 
     if gt.shape!=sr.shape:
         print('dimensions do not match on image:',gtlist[i],srlist[i])
@@ -68,7 +68,7 @@ for i in range(len(gtlist)):
     #print(gt-sr)
     #print(err)
     error+=np.sum(err)
-    pixelcount+=gtw*gth*3
+    pixelcount+=gtw*gth
 mse=error/pixelcount
 psnr=20*np.log10(255)-10*np.log10(mse)
 print("PSNR=",psnr)
