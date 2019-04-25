@@ -83,10 +83,7 @@ for image in imagelist:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,2] = transform.resize(ycrcv[:,:,2], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin=np.uint8(np.clip(ycrcvorigin.astype('float')*255.,0.,255.))
+        ycrcvorigin=cv2.resize(ycrcv,(int(height/2),int(width/2)),interpolation=cv2.INTER_CUBIC)
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     grayorigin = ycrcvorigin[:,:,0]
@@ -95,13 +92,11 @@ for image in imagelist:
     grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
     
     # Upscale (bilinear interpolation)
-    heightLR, widthLR = grayorigin.shape    
-    heightgridLR = np.linspace(0,heightLR-1,heightLR)
-    widthgridLR = np.linspace(0,widthLR-1,widthLR)
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, grayorigin, kind='linear')
-    heightgridHR = np.linspace(0,heightLR-0.5,heightLR*2)
-    widthgridHR = np.linspace(0,widthLR-0.5,widthLR*2)
-    upscaledLR = bilinearinterp(widthgridHR, heightgridHR)
+    heightLR, widthLR = grayorigin.shape
+    if args.cubic:
+        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
+    else:
+        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_CUBIC)
     # Calculate predictHR pixels
     
     heightHR, widthHR = upscaledLR.shape
@@ -139,26 +134,17 @@ for image in imagelist:
     # Bilinear interpolation on CbCr field
     result = np.zeros((heightHR, widthHR, 3))
 
-    y = ycrcvorigin[:,:,0]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='cubic')
-    result[:,:,0] = bilinearinterp(widthgridHR, heightgridHR)
-    
-    cr = ycrcvorigin[:,:,1]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='cubic')
-    result[:,:,1] = bilinearinterp(widthgridHR, heightgridHR)
-
-    cv = ycrcvorigin[:,:,2]
-    bilinearinterp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='cubic')
-    result[:,:,2] = bilinearinterp(widthgridHR, heightgridHR)
+    result = cv2.resize(ycrcvorigin,(heightLR*2, widthLR*2),interpolation=cv2.INTER_CUBIC)
 
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR
+
     result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
     try:
         os.mkdir('results/'+ args.output)
     except Exception as e:
         pass#print("\nignoring error:",e)
 
-    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.bmp',
+    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.png',
      cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
     imagecount += 1
     # Visualizing the process of RAISR image upscaling

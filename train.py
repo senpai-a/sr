@@ -4,6 +4,7 @@ import os
 import pickle
 import sys
 from cgls import cgls
+from ls import ls
 from filterplot import filterplot
 from gaussian2d import gaussian2d
 from gettrainargs import gettrainargs
@@ -40,6 +41,9 @@ gradientmargin = floor(gradientsize/2)
 Q = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize, filterSize))
 V = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
 h = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
+
+classCount = np.zeros((Qangle, Qstrength, Qcoherence, R*R))
+coStCount = np.zeros((1000,1000))#coherence 0-1 strength 0-0.1
 
 # Read Q,V from file
 if args.qmatrix:
@@ -101,15 +105,13 @@ for image in imagelist:
     if width%2==1:
         width-=1
     grayorigin=grayorigin[0:height,0:width]
-    LR = transform.resize(grayorigin, (int(height/2),int(width/2)), order=3, mode='reflect', anti_aliasing=False)
+    LR = cv2.resize(grayorigin, (int(height/2),int(width/2)), interpolation=cv2.INTER_CUBIC)
     # Upscale (bilinear interpolation)
-    height, width = LR.shape
-    heightgrid = np.linspace(0, height-1, height)
-    widthgrid = np.linspace(0, width-1, width)
-    bilinearinterp = interpolate.interp2d(widthgrid, heightgrid, LR, kind='linear')
-    heightgrid = np.linspace(0, height-1, height*2-1)
-    widthgrid = np.linspace(0, width-1, width*2-1)
-    upscaledLR = bilinearinterp(widthgrid, heightgrid)
+    heightLR, widthLR = LR.shape
+    if args.cubic:
+        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
+    else:
+        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_CUBIC)
     # Calculate A'A, A'b and push them into Q, V
     height, width = upscaledLR.shape
     operationcount = 0
@@ -136,6 +138,10 @@ for image in imagelist:
 
             # Get pixel type
             pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
+
+            classCount[angle,strength,coherence,pixeltype]+=1
+            coStCount[int(u*1000),int(lamda*10000)]+=1
+
             # Get corresponding HR pixel
             pixelHR = grayorigin[row,col]
             if exQ:
@@ -176,10 +182,12 @@ for image in imagelist:
     imagecount += 1
 
 # Write Q,V to file
+'''
 with open("q.p", "wb") as fp:
     pickle.dump(Q, fp)
 with open("v.p", "wb") as fp:
     pickle.dump(V, fp)
+'''
 if not exQ:
     Qextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize, patchsize*patchsize))
     Vextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize))
@@ -219,7 +227,12 @@ for pixeltype in range(0, R*R):
                     print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
                     sys.stdout.flush()
                 operationcount += 1
-                h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype], V[angle,strength,coherence,pixeltype])
+                if args.ls:
+                    h[angle,strength,coherence,pixeltype] = ls(Q[angle,strength,coherence,pixeltype],
+                      V[angle,strength,coherence,pixeltype], args.l)
+                else:
+                    h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype],
+                      V[angle,strength,coherence,pixeltype])
 
 # Write filter to file
 of="filter.p"
@@ -227,6 +240,10 @@ if args.output:
     of=args.output
 with open(of, "wb") as fp:
     pickle.dump(h, fp)
+with open("classConut_"+of,"wb") as f:
+    pickle.dump(classCount,f)
+with open("coStConut_"+of,"wb") as f:
+    pickle.dump(coStCount,f)
 
 # Plot the learned filters
 if args.plot:

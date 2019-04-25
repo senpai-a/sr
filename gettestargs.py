@@ -10,5 +10,9 @@ def gettestargs():
     parser.add_argument("-i", "--input", help="input folder name")
     parser.add_argument("-gt", "--groundTruth", help="Use test images as ground truth (down scale them first)",
     action="store_true")
+    parser.add_argument("-cu", "--cubic", help="Use bicubic for init",
+    action="store_true")
+    parser.add_argument("-li", "--linear", help="Use bilinear for init",
+    action="store_true")
     args = parser.parse_args()
     return args
