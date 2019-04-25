@@ -37,52 +37,26 @@ for image in imagelist:
     ycrcv = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     #downscale
     if args.groundTruth:
-        height, width = ycrcv[:,:,0].shape
-        
+        height, width = ycrcv[:,:,0].shape        
         if height%2==1:
             height-=1
         if width%2==1:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        ycrcvorigin[:,:,0] = transform.resize(ycrcv[:,:,0], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,1] = transform.resize(ycrcv[:,:,1], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin[:,:,2] = transform.resize(ycrcv[:,:,2], (int(height/2),int(width/2)),order=3, mode='reflect', anti_aliasing=False)
-        ycrcvorigin=np.uint8(np.clip(ycrcvorigin.astype('float')*255.,0.,255.))
+        ycrcvorigin=cv2.resize(ycrcv,(int(height/2),int(width/2)),interpolation=cv2.INTER_CUBIC)
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
        
     # Upscale
-    heightLR, widthLR = ycrcvorigin[:,:,0].shape    
-    heightgridLR = np.linspace(0,heightLR-1,heightLR)
-    widthgridLR = np.linspace(0,widthLR-1,widthLR)
-    
-    heightgridHR = np.linspace(0,heightLR-0.5,heightLR*2)
-    widthgridHR = np.linspace(0,widthLR-0.5,widthLR*2)
-
-    heightHR=len(heightgridHR)
-    widthHR=len(widthgridHR)
-
-    result = np.zeros((heightHR, widthHR, 3))
-
-    y = ycrcvorigin[:,:,0]
-    interp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='cubic')
-    result[:,:,0] = interp(widthgridHR, heightgridHR)
-    
-    cr = ycrcvorigin[:,:,1]
-    interp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='cubic')
-    result[:,:,1] = interp(widthgridHR, heightgridHR)
-
-    cv = ycrcvorigin[:,:,2]
-    interp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='cubic')
-    result[:,:,2] = interp(widthgridHR, heightgridHR)
-
-    result=np.clip(result.astype('float'),0.,255.)
-    result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
+    heightLR, widthLR = ycrcvorigin[:,:,0].shape
+    result = np.zeros((heightLR*2, widthLR*2, 3))
+    result = cv2.resize(ycrcvorigin,(heightLR*2, widthLR*2),interpolation=cv2.INTER_CUBIC)
+    result = cv2.cvtColor(result, cv2.COLOR_YCrCb2RGB)    
     try:
         os.mkdir('results/'+ args.output)
     except Exception as e:
         pass#print("\nignoring error:",e)
 
-    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.bmp',
+    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.png',
      cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
