@@ -109,9 +109,9 @@ for image in imagelist:
     # Upscale (bilinear interpolation)
     heightLR, widthLR = LR.shape
     if args.cubic:
-        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
-    else:
         upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_CUBIC)
+    else:
+        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
     # Calculate A'A, A'b and push them into Q, V
     height, width = upscaledLR.shape
     operationcount = 0
