@@ -44,14 +44,14 @@ for image in imagelist:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        ycrcvorigin=cv2.resize(ycrcv,(int(height/2),int(width/2)),interpolation=cv2.INTER_CUBIC)
+        ycrcvorigin=cv2.resize(ycrcv,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
        
     # Upscale
     heightLR, widthLR = ycrcvorigin[:,:,0].shape
     result = np.zeros((heightLR*2, widthLR*2, 3))
-    result = cv2.resize(ycrcvorigin,(heightLR*2, widthLR*2),interpolation=cv2.INTER_CUBIC)
+    result = cv2.resize(ycrcvorigin,(widthLR*2, heightLR*2),interpolation=cv2.INTER_CUBIC)
     result = cv2.cvtColor(result, cv2.COLOR_YCrCb2RGB)    
     try:
         os.mkdir('results/'+ args.output)
