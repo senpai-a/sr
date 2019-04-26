@@ -24,6 +24,8 @@ Qangle = 24
 Qstrength = 3
 Qcoherence = 3
 trainpath = 'train'
+if args.input:
+    trainpath=args.input
 
 exQ=args.extended
 filterSize=patchsize*patchsize
@@ -43,7 +45,7 @@ V = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
 h = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
 
 classCount = np.zeros((Qangle, Qstrength, Qcoherence, R*R))
-coStCount = np.zeros((1000,1000))#coherence 0-1 strength 0-0.1
+coStCount = np.zeros((1001,10000))#coherence 0-1 strength 0-0.1
 
 # Read Q,V from file
 if args.qmatrix:
@@ -140,7 +142,13 @@ for image in imagelist:
             pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
 
             classCount[angle,strength,coherence,pixeltype]+=1
-            coStCount[int(u*1000),int(lamda*10000)]+=1
+            ui=int(u*1000)
+            li=int(lamda*10000)
+            if ui>1000:
+                ui=1000
+            if li>9999:
+                li=9999
+            coStCount[ui,li]+=1
 
             # Get corresponding HR pixel
             pixelHR = grayorigin[row,col]
@@ -229,7 +237,7 @@ for pixeltype in range(0, R*R):
                 operationcount += 1
                 if args.ls:
                     h[angle,strength,coherence,pixeltype] = ls(Q[angle,strength,coherence,pixeltype],
-                      V[angle,strength,coherence,pixeltype], args.l)
+                      V[angle,strength,coherence,pixeltype], float(args.l))
                 else:
                     h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype],
                       V[angle,strength,coherence,pixeltype])
