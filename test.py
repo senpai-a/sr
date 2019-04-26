@@ -27,6 +27,11 @@ if exQ:
 else:
     filterSize=patchsize*patchsize
 
+try:
+    os.mkdir('results/'+ args.output)
+except Exception as e:
+    pass#print("\nignoring error:",e)
+
 # Calculate the margin
 maxblocksize = max(patchsize, gradientsize)
 margin = floor(maxblocksize/2)
@@ -83,7 +88,9 @@ for image in imagelist:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        ycrcvorigin=cv2.resize(ycrcv,(int(height/2),int(width/2)),interpolation=cv2.INTER_CUBIC)
+        ycrcvorigin=cv2.resize(ycrcv,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
+        cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'LR.png',
+            cv2.cvtColor(ycrcvorigin, cv2.COLOR_YCrCb2BGR))
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     grayorigin = ycrcvorigin[:,:,0]
@@ -94,9 +101,9 @@ for image in imagelist:
     # Upscale (bilinear interpolation)
     heightLR, widthLR = grayorigin.shape
     if args.cubic:
-        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
+        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
     else:
-        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_CUBIC)
+        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
     # Calculate predictHR pixels
     
     heightHR, widthHR = upscaledLR.shape
@@ -134,15 +141,12 @@ for image in imagelist:
     # Bilinear interpolation on CbCr field
     result = np.zeros((heightHR, widthHR, 3))
 
-    result = cv2.resize(ycrcvorigin,(heightLR*2, widthLR*2),interpolation=cv2.INTER_CUBIC)
-
+    result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
+    cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'Interp.png',
+            cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2BGR))
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR
 
     result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
-    try:
-        os.mkdir('results/'+ args.output)
-    except Exception as e:
-        pass#print("\nignoring error:",e)
 
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.png',
      cv2.cvtColor(result, cv2.COLOR_RGB2BGR))

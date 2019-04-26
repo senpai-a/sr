@@ -107,15 +107,15 @@ for image in imagelist:
     if width%2==1:
         width-=1
     grayorigin=grayorigin[0:height,0:width]
-    LR = cv2.resize(grayorigin, (int(height/2),int(width/2)), interpolation=cv2.INTER_CUBIC)
+    LR = cv2.resize(grayorigin, (int(width/2),int(height/2)), interpolation=cv2.INTER_CUBIC)
     # Upscale (bilinear interpolation)
-    heightLR, widthLR = LR.shape
+    #heightLR, widthLR = LR.shape
     if args.cubic:
-        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_CUBIC)
+        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_CUBIC)
     else:
-        upscaledLR = cv2.resize(grayorigin,(heightLR*2,widthLR*2),interpolation=cv2.INTER_LINEAR)
+        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
     # Calculate A'A, A'b and push them into Q, V
-    height, width = upscaledLR.shape
+    #height, width = upscaledLR.shape
     operationcount = 0
     totaloperations = (height-2*margin) * (width-2*margin)
     for row in range(margin, height-margin):
