@@ -49,10 +49,39 @@ for image in imagelist:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
        
     # Upscale
+    '''
+    heightLR, widthLR = ycrcvorigin[:,:,0].shape    
+    heightgridLR = np.linspace(0,heightLR-1,heightLR)
+    widthgridLR = np.linspace(0,widthLR-1,widthLR)
+
+    heightgridHR = np.linspace(0,heightLR-0.5,heightLR*2)
+    widthgridHR = np.linspace(0,widthLR-0.5,widthLR*2)
+
+    heightHR=len(heightgridHR)
+    widthHR=len(widthgridHR)
+
+    result = np.zeros((heightHR, widthHR, 3))
+
+    y = ycrcvorigin[:,:,0]
+    interp = interpolate.interp2d(widthgridLR, heightgridLR, y, kind='cubic')
+    result[:,:,0] = interp(widthgridHR, heightgridHR)
+
+    cr = ycrcvorigin[:,:,1]
+    interp = interpolate.interp2d(widthgridLR, heightgridLR, cr, kind='cubic')
+    result[:,:,1] = interp(widthgridHR, heightgridHR)
+
+    cv = ycrcvorigin[:,:,2]
+    interp = interpolate.interp2d(widthgridLR, heightgridLR, cv, kind='cubic')
+    result[:,:,2] = interp(widthgridHR, heightgridHR)
+
+    result=np.clip(result.astype('float'),0.,255.)
+    result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
+    '''
     heightLR, widthLR = ycrcvorigin[:,:,0].shape
     result = np.zeros((heightLR*2, widthLR*2, 3))
     result = cv2.resize(ycrcvorigin,(widthLR*2, heightLR*2),interpolation=cv2.INTER_CUBIC)
-    result = cv2.cvtColor(result, cv2.COLOR_YCrCb2RGB)    
+    result = cv2.cvtColor(result, cv2.COLOR_YCrCb2RGB)
+    
     try:
         os.mkdir('results/'+ args.output)
     except Exception as e:
