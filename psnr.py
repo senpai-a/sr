@@ -35,19 +35,29 @@ for parent, dirnames, filenames in os.walk(args.sr):
             sl.append(filename[:-4])
 
 #print(np.matrix([gtlist,srlist]).T)
+'''
 if len(gtlist)!=len(srlist):
     print('error:file number does not match')
     print(gtlist,srlist)
     exit()
+'''
 
 pixelcount=0
 error=0.
 for i in range(len(gtlist)):
-    if gl[i]!=sl[i]:
-        print('filename dose not match. Quiting.')
+    j=-1
+    try:
+        j = sl.index(gl[i])
+    except Exception as e:
+        print('cannot find file with the same name in sr folder: '+gtlist[i])
+        print(e)
         exit()
+    if j==-1:
+        print('cannot find file with the same name in sr folder: '+gtlist[i])
+        exit()
+    
     gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
-    sr=cv2.cvtColor(cv2.imread(srlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
+    sr=cv2.cvtColor(cv2.imread(srlist[j]),cv2.COLOR_BGR2YCrCb)[:,:,0]
     #gt=cv2.imread(gtlist[i])[:,:,0:3]
     #sr=cv2.imread(srlist[i])[:,:,0:3]
     (gth,gtw)=gt.shape
