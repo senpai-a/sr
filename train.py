@@ -111,9 +111,15 @@ for image in imagelist:
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
     if args.cubic:
-        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_CUBIC)
+        if args.cv2:
+            upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_CUBIC)
+        else:
+            pass
     else:
-        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
+        if args.cv2:
+            upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
+        else:
+            pass
     # Calculate A'A, A'b and push them into Q, V
     #height, width = upscaledLR.shape
     operationcount = 0
@@ -132,6 +138,17 @@ for image in imagelist:
             gradientblock = upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
             # Calculate hashkey
             angle, strength, coherence,theta,lamda,u = hashkey(gradientblock, Qangle, weighting)
+
+            if args.ex2:
+                cocdf=np.zeros(1000)
+                stcdf=np.zeros(2000)
+                with open("cocdf.p","rb") as f:
+                    cocdf=pickle.load(f)
+                with open("stcdf.p","rb") as f:
+                    stcdf=pickle.load(f)
+                theta = (theta - angle*pi/24)/(pi/24)
+                lamda = stcdf[int(lamda*1000)]
+                u = cocdf[int(u*1000)]
 
             # Get patch
             patch = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]

@@ -14,5 +14,9 @@ def gettestargs():
     action="store_true")
     parser.add_argument("-li", "--linear", help="Use bilinear for init",
     action="store_true")
+    parser.add_argument("-ex2", "--ex2", help="Use normalized features for ExLM",
+    action="store_true")
+    parser.add_argument("-cv2", "--cv2", help="Use cv2 interpolation",
+    action="store_true")
     args = parser.parse_args()
     return args

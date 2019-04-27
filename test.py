@@ -101,9 +101,15 @@ for image in imagelist:
     # Upscale (bilinear interpolation)
     heightLR, widthLR = grayorigin.shape
     if args.cubic:
-        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
+        if args.cv2:
+            upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
+        else:
+            pass
     else:
-        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
+        if args.cv2:
+            upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
+        else:
+            pass
     # Calculate predictHR pixels
     
     heightHR, widthHR = upscaledLR.shape
@@ -126,6 +132,16 @@ for image in imagelist:
             gradientblock = upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
             # Calculate hashkey
             angle, strength, coherence, theta, lamda, u = hashkey(gradientblock, Qangle, weighting)
+            if args.ex2:
+                cocdf=np.zeros(1000)
+                stcdf=np.zeros(2000)
+                with open("cocdf.p","rb") as f:
+                    cocdf=pickle.load(f)
+                with open("stcdf.p","rb") as f:
+                    stcdf=pickle.load(f)
+                theta = (theta - angle*pi/24)/(pi/24)
+                lamda = stcdf[int(lamda*1000)]
+                u = cocdf[int(u*1000)]
             if exQ:
                 patch = np.concatenate((patch,np.array([theta,lamda,u,1.])),axis=None)
             # Get pixel type
@@ -140,8 +156,10 @@ for image in imagelist:
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
     # Bilinear interpolation on CbCr field
     result = np.zeros((heightHR, widthHR, 3))
-
-    result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
+    if args.cv2:
+        result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
+    else:
+        pass
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'Interp.png',
             cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2BGR))
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR

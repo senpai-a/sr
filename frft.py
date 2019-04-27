@@ -1,6 +1,9 @@
 import numpy as np
 from math import pi
 
+lastN=None
+lastE=None
+
 def make_E(N,p):
     d2 = np.array([1,-2,1])
     d_p = 1
@@ -58,7 +61,12 @@ def make_E(N,p):
     return E
 
 def get_E(N,p):
-    return make_E(N,p)
+    global lastN,lastE
+    if lastN==None:
+        lastN=N
+        lastE=make_E(N,p)
+
+    return lastE
 
 #f:离散信号 a:阶数 p:近似阶数，默认len(f)/2
 def disfrft(f,a,p=-1):
@@ -78,4 +86,14 @@ def disfrft(f,a,p=-1):
     pt1=np.exp(-1j*pi/2*a*alist)
     pt2=np.ravel(E.T.dot(f[shft].astype(complex)))
     ret[shft]=E.dot(pt1*pt2)
+    return ret
+
+def frft2d(mat,ax,ay):
+    m,n=mat.shape
+    xspec=np.zeros(mat.shape).astype(complex)
+    ret=np.zeros(mat.shape).astype(complex)
+    for i in range(0,m):
+        xspec[i,:]=disfrft(mat[i,:],ax)
+    for j in range(0,n):
+        ret[:,j]=disfrft(xspec[:,j],ay)
     return ret

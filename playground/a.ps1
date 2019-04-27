@@ -13,12 +13,12 @@ python train.py -i "SR_training_datasets\BSDS200" -o "B200Exculs.p" -cu -ls -e -
 python train.py -i "SR_training_datasets\G100" -o "G100Ex.p" -li -cgls -e
 
 python test.py -f "B200li.p" -i "SR_testing_datasets\Set14" -o "B200li_Set14" -gt -li
-python test.py -f "B200cu.p" -i "SR_testing_datasets\Set14" -o "B200cu_Set14" -gt -cu
+python test.py -f "B500cu.p" -i "SR_testing_datasets\Set14" -o "B500cu_Set14" -gt -cu
  
 python test.py -f "B200Exli.p" -i "SR_testing_datasets\Set14" -o "B200Exli_Set14" -gt -li -e
 python test.py -f "B200Excu.p" -i "SR_testing_datasets\Set14" -o "B200Excu_Set14" -gt -cu -e
  
 
-python psnr.py -gt "SR_testing_datasets\Set14" -sr "results\B200li_Set14"
+python psnr.py -gt "SR_testing_datasets\Set14" -sr "results\B500cu_Set14"
 
 python bicubic.py -gt -i "SR_testing_datasets\Set5" -o "bicubic_set5"
