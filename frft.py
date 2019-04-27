@@ -72,11 +72,10 @@ def disfrft(f,a,p=-1):
     f = np.matrix(f).T
     p = min(max(2,p),N-1)
     E = get_E(N,p)
+    #print(E)
     ret = np.zeros(N).astype(complex)
     alist=np.append(range(0,N-1),N-1+even)
-    pt1=E.dot(np.exp(-1j*pi/2*a*alist))
+    pt1=np.exp(-1j*pi/2*a*alist)
     pt2=np.ravel(E.T.dot(f[shft].astype(complex)))
-    print(pt1)
-    print(pt2)
-    ret[shft]=pt1*pt2
+    ret[shft]=E.dot(pt1*pt2)
     return ret
