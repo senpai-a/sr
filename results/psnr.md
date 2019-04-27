@@ -37,4 +37,6 @@ cv2interp
 training set|testing set|linear|linearEx|cubic|cubicEx
 ---|---|---|---|---|---
 bicubic|Set5|-|-|35.5491|-
+bicubic|Set14|-|-|33.1642|-
 B200|Set5|35.1673|35.1661|35.4998|35.4988
+B200|Set14|32.9022|32.9001|33.1404|33.1376
