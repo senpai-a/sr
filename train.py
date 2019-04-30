@@ -13,6 +13,7 @@ from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
+from bicubic import bicubic2x
 
 args = gettrainargs()
 
@@ -110,16 +111,13 @@ for image in imagelist:
     LR = cv2.resize(grayorigin, (int(width/2),int(height/2)), interpolation=cv2.INTER_CUBIC)
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
-    if args.cubic:
+    if args.linear:
+        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
+    else:
         if args.cv2:
             upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_CUBIC)
         else:
-            pass
-    else:
-        if args.cv2:
-            upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
-        else:
-            pass
+            upscaledLR = bicubic2x(grayorigin)
     # Calculate A'A, A'b and push them into Q, V
     #height, width = upscaledLR.shape
     operationcount = 0

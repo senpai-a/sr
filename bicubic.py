@@ -20,6 +20,30 @@ def gettestargs():
     args = parser.parse_args()
     return args
 
+def bicubic2x(mat):
+    h,w=mat.shape
+    mch=False
+    if len(mat.shape)==3:
+        ch=mat.shape[2]
+        mch=True
+    heightgridLR = np.linspace(0,h-1,h)
+    widthgridLR = np.linspace(0,w-1,w)
+
+    heightgridHR = np.linspace(0,h-0.5,h*2)
+    widthgridHR = np.linspace(0,w-0.5,w*2)
+    heightHR=len(heightgridHR)
+    widthHR=len(widthgridHR)
+    result = np.zeros((heightHR,widthHR))
+    if not mch:        
+        interp=interpolate.interp2d(widthgridLR, heightgridLR, mat, kind='cubic')
+        result=interp(widthgridHR,heightgridHR)
+    else:
+        for i in range(ch):
+            interp=interpolate.interp2d(widthgridLR, heightgridLR, mat[:,:,i], kind='cubic')
+            result[:,:,i]=interp(widthgridHR,heightgridHR)
+    result=np.clip(result.astype('float'),0.,255.)
+    return result
+
 args = gettestargs()
 
 # Get image list

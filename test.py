@@ -10,6 +10,7 @@ from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
+from bicubic import bicubic2x
 
 args = gettestargs()
 exQ=args.extended
@@ -100,16 +101,13 @@ for image in imagelist:
     
     # Upscale (bilinear interpolation)
     heightLR, widthLR = grayorigin.shape
-    if args.cubic:
+    if args.linear:
+        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
+    else:
         if args.cv2:
             upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
         else:
-            pass
-    else:
-        if args.cv2:
-            upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
-        else:
-            pass
+            upscaledLR = bicubic2x(grayorigin)
     # Calculate predictHR pixels
     
     heightHR, widthHR = upscaledLR.shape
@@ -159,7 +157,8 @@ for image in imagelist:
     if args.cv2:
         result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
     else:
-        pass
+        result = bicubic2x(ycrcvorigin)
+
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'Interp.png',
             cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2BGR))
     result[margin:heightHR-margin,margin:widthHR-margin,0] = predictHR
