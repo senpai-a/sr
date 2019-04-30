@@ -125,11 +125,11 @@ for image in imagelist:
             operationcount += 1
             # Get patch
             patch = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
-            patch = patch.ravel()
             # Get gradient block
-            gradientblock = upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
+            gradientblock = patch #upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
             # Calculate hashkey
             angle, strength, coherence, theta, lamda, u = hashkey(gradientblock, Qangle, weighting)
+            patch = patch.ravel()
             if args.ex2:
                 cocdf=np.zeros(1000)
                 stcdf=np.zeros(2000)

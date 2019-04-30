@@ -149,7 +149,7 @@ for image in imagelist:
             operationcount += 1
             
             # Get gradient block
-            gradientblock = upscaledLR[row-gradientmargin:row+gradientmargin+1, col-gradientmargin:col+gradientmargin+1]
+            gradientblock = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
             # Calculate hashkey
             angle, strength, coherence,theta,lamda,u = hashkey(gradientblock, Qangle, weighting)
 

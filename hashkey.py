@@ -6,8 +6,8 @@ def hashkey(block, Qangle, W):
     gy, gx = np.gradient(block)
 
     # Transform 2D matrix into 1D array
-    gx = gx.ravel()
-    gy = gy.ravel()
+    gx = gx[1:-1,1:-1].ravel()
+    gy = gy[1:-1,1:-1].ravel()
 
     # SVD calculation
     G = np.vstack((gx,gy)).T
