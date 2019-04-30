@@ -4,7 +4,6 @@ from math import atan2, floor, pi
 def hashkey(block, Qangle, W):
     # Calculate gradient
     gy, gx = np.gradient(block)
-
     # Transform 2D matrix into 1D array
     gx = gx[1:-1,1:-1].ravel()
     gy = gy[1:-1,1:-1].ravel()
@@ -59,8 +58,8 @@ def hashkey(block, Qangle, W):
         coherence = 1
 
     # Bound the output to the desired ranges
-    if angle > 23:
-        angle = 23
+    if angle > Qangle-1:
+        angle = Qangle-1
     elif angle < 0:
         angle = 0
 

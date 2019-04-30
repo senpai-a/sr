@@ -31,10 +31,10 @@ for parent, dirnames, filenames in os.walk(args.input):
             imagelist.append(os.path.join(parent, filename))
 
 Vsize  = 10000
-patchV = np.zeros(4,Vsize,patchSize,patchSize)
+patchV = np.zeros((4,Vsize,patchSize,patchSize))
 Vid = np.zeros(4).astype(int)
 
-print('Collecting patches...',end='')
+print('Collecting patches...')
 imcount=0
 for img in imagelist:
     imcount+=1
@@ -42,11 +42,15 @@ for img in imagelist:
     im=cv2.cvtColor(im,cv2.COLOR_BGR2YCrCb)[:,:,0]
     imh=hpf(im)
     w,h=imh.shape
+    #cv2.imshow('',np.uint8(imh))
+    #cv2.waitKey(0)
+    #print(im.shape)
+    #print(imh.shape)
     processi=0
     processma=(h-2*margin)*(w-2*margin)
     #collect all patched with central HF energy>20
-    for row in range(margin,h-margin):
-        for col in range(margin,w-margin):
+    for row in range(margin,w-margin):
+        for col in range(margin,h-margin):
             processi+=1            
             print('\r',imcount,'/',len(imagelist),' images',end='|')
             print('█'*(processi*50//processma),end='')
@@ -56,12 +60,14 @@ for img in imagelist:
                 continue
 
             #gradientblock = imh[row-gradientMargin:row+gradientMargin+1,col-gradientMargin:col+gradientMargin+1]
-            patch = imh[row-patchMargin:row+patchMargin+1,col-patchMargin:col+patchMargin+1]
+            patch = imh[row-margin:row+margin+1,col-margin:col+margin+1]
             angle, strength, coherence, theta, lamda, u = hashkey(patch,8,W)
+            '''print(angle,theta*180/3.14)
+            cv2.imshow('',cv2.resize(np.uint8(patch),(110,110),interpolation=cv2.INTER_NEAREST))
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()  '''         
             #get angle 0..3
-            angle=angle//2
-            if angle==-1:
-                angle=3
+            angle=angle%4
             patchV[angle,Vid[angle],:,:]=patch
 
             Vid[angle]+=1
@@ -69,7 +75,7 @@ for img in imagelist:
                 Vsize*=2
                 patchV.resize((4,Vsize,patchSize,patchSize))
 print('Fin')
-markCount = 200
+markCount = 20
 patchSelect=np.zeros((4,markCount,patchSize,patchSize))
 fspa=np.zeros((4,markCount,7))#θ,λ,u,σxx,σxy,σyx,σyy
 ffre=np.zeros((4,markCount,20))
@@ -78,7 +84,10 @@ mk=np.zeros((4,markCount))
 pcaL=[PCA(n_components=20),PCA(n_components=20),PCA(n_components=20),PCA(n_components=20)]
 processi=0
 processma=4*markCount
-
+print("sample count:",Vid)
+if(np.amin(Vid)<markCount):
+    print('No enough samples.Quiting')
+    exit()
 #mark patches manually
 for angle in range(4):
     selectId=np.random.permutation(Vid[angle])[:markCount]
@@ -88,8 +97,9 @@ for angle in range(4):
         print('\r',processi,'/',processma,'samples marked',end='')
         sys.stdout.flush()
 
-        p=patchSelect[angle,i,:,:]
-        showp=cv2.resize(p,0,fx=16,fy=16,interpolation=cv2.INTER_NEAREST)
+        p=np.uint8(patchSelect[angle,i,:,:])
+        #print(p)
+        showp=cv2.resize(p,(0,0),fx=55,fy=55,interpolation=cv2.INTER_NEAREST)
         cv2.imshow("Please mark sample by pressing 0 for bad or 1 for good",showp)
         mark=-1
         while mark==-1:
@@ -112,7 +122,7 @@ for angle in range(4):
         print('\r',processi,'/',processma,'samples processed',end='')
         sys.stdout.flush()
         patch=patchSelect[angle,i,:,:]
-        angle, strength, coherence, θ, λ, u = hashkey(patch,24,W)
+        aaaa, strength, coherence, θ, λ, u = hashkey(patch,24,W)
         gy,gx=np.gradient(patch)
         sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
         spa=np.concatenate((np.array([θ, λ, u]),sigma.ravel()))
@@ -132,11 +142,11 @@ print('training svc...')
 svcspa=[svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear')]
 svcfre=[svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear')]
 for angle in range(4):
-    print('\r',angle*2,'/8 trained.',end='',sep='')
+    print('\r',angle*2+1,'/8 trained.',end='',sep='')
     sys.stdout.flush()
     svcspa[angle].fit(fspa[angle,:,:],mk[angle,:])
 
-    print('\r',angle*2+1,'/8 trained.',end='',sep='')
+    print('\r',angle*2+2,'/8 trained.',end='',sep='')
     sys.stdout.flush()
     svcfre[angle].fit(ffre[angle,:,:],mk[angle,:])
 
