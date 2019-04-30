@@ -7,7 +7,8 @@ from cgls import cgls
 from ls import ls
 from filterplot import filterplot
 from gaussian2d import gaussian2d
-from gettrainargs import gettrainargs
+#from gettrainargs import gettrainargs
+import argparse
 from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
@@ -15,7 +16,22 @@ from scipy import interpolate
 from skimage import transform
 from bicubic import bicubic2x
 
-args = gettrainargs()
+#args = gettrainargs()
+parser_ = argparse.ArgumentParser()
+parser_.add_argument("-e", "--extended", help="Use Extended Linear Mapping", action="store_true")
+parser_.add_argument("-q", "--qmatrix", help="Use file as Q matrix")
+parser_.add_argument("-v", "--vmatrix", help="Use file as V matrix")
+parser_.add_argument("-i", "--input", help="Specify training set")
+parser_.add_argument("-o", "--output", help="File to save filter")
+parser_.add_argument("-p", "--plot", help="Plot the learned filters", action="store_true")
+parser_.add_argument("-li", "--linear", help="Use bilinear for init",action="store_true")
+parser_.add_argument("-ls", "--ls", help="Use normalized least square with normalization factor lambda -l",action="store_true")
+parser_.add_argument("-l", "--l", help="Normalization factor lambda")
+parser_.add_argument("-ex2", "--ex2", help="Use normalized features for ExLM",action="store_true")
+parser_.add_argument("-cv2", "--cv2", help="Use cv2 interpolation",action="store_true")
+#print(parser_)
+args = parser_.parse_args()
+print(args)
 
 # Define parameters
 R = 2 #pixel type 1D

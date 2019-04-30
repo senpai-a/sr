@@ -11,21 +11,15 @@ from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
 
-def gettestargs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", help="output folder name")
-    parser.add_argument("-gt", "--groundTruth", help="Use test images as ground truth (down scale them first)",
-    action="store_true")
-    parser.add_argument("-i", "--input", help="input folder name")
-    args = parser.parse_args()
-    return args
-
 def bicubic2x(mat):
-    h,w=mat.shape
     mch=False
     if len(mat.shape)==3:
         ch=mat.shape[2]
         mch=True
+    if mch:
+        h,w,ch=mat.shape
+    else:
+        h,w=mat.shape
     heightgridLR = np.linspace(0,h-1,h)
     widthgridLR = np.linspace(0,w-1,w)
 
@@ -33,7 +27,10 @@ def bicubic2x(mat):
     widthgridHR = np.linspace(0,w-0.5,w*2)
     heightHR=len(heightgridHR)
     widthHR=len(widthgridHR)
-    result = np.zeros((heightHR,widthHR))
+    if mch:
+        result = np.zeros((heightHR,widthHR,ch))
+    else:
+        result = np.zeros((heightHR,widthHR))
     if not mch:        
         interp=interpolate.interp2d(widthgridLR, heightgridLR, mat, kind='cubic')
         result=interp(widthgridHR,heightgridHR)
@@ -43,9 +40,9 @@ def bicubic2x(mat):
             result[:,:,i]=interp(widthgridHR,heightgridHR)
     result=np.clip(result.astype('float'),0.,255.)
     return result
-
-args = gettestargs()
-
+'''
+from getbicubicargs import getbicubicargs
+args=getbicubicargs()
 # Get image list
 tpath = 'test'
 if args.input:
@@ -73,7 +70,7 @@ for image in imagelist:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
        
     # Upscale
-    '''
+   
     heightLR, widthLR = ycrcvorigin[:,:,0].shape    
     heightgridLR = np.linspace(0,heightLR-1,heightLR)
     widthgridLR = np.linspace(0,widthLR-1,widthLR)
@@ -100,7 +97,7 @@ for image in imagelist:
 
     result=np.clip(result.astype('float'),0.,255.)
     result = cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2RGB)
-    '''
+    
     heightLR, widthLR = ycrcvorigin[:,:,0].shape
     result = np.zeros((heightLR*2, widthLR*2, 3))
     result = cv2.resize(ycrcvorigin,(widthLR*2, heightLR*2),interpolation=cv2.INTER_CUBIC)
@@ -113,3 +110,4 @@ for image in imagelist:
 
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + '.png',
      cv2.cvtColor(result, cv2.COLOR_RGB2BGR))
+     '''
