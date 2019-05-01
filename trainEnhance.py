@@ -194,4 +194,4 @@ of='enhanceFilter.bin'
 if args.output:
     of = args.output
 with open(of,'wb') as f:
-    pickle.dump(h,f)
+    pickle.dump((frefactor,h),f)
