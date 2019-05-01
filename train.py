@@ -31,7 +31,7 @@ parser_.add_argument("-ex2", "--ex2", help="Use normalized features for ExLM",ac
 parser_.add_argument("-cv2", "--cv2", help="Use cv2 interpolation",action="store_true")
 #print(parser_)
 args = parser_.parse_args()
-print(args)
+#print(args)
 
 # Define parameters
 R = 2 #pixel type 1D

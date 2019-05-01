@@ -42,8 +42,8 @@ for img in imagelist:
     im=cv2.cvtColor(im,cv2.COLOR_BGR2YCrCb)[:,:,0]
     imh=hpf(im)
     w,h=imh.shape
-    #cv2.imshow('',np.uint8(imh))
-    #cv2.waitKey(0)
+    cv2.imshow('',np.uint8(imh))
+    cv2.waitKey(0)
     #print(im.shape)
     #print(imh.shape)
     processi=0
