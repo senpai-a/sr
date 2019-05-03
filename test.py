@@ -54,6 +54,7 @@ if h.shape[-1]!=filterSize:
 if args.groundTruth:
     classError = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
     classCount = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
+    patchErrorDist = np.zeros((Qangle,Qstrength,Qcoherence,R*R,1000,1000,1000,200))
 
 # Matrix preprocessing
 # Preprocessing normalized Gaussian matrix W for hashkey calculation
@@ -149,6 +150,14 @@ for image in imagelist:
                 pixelerror=ycrcv[row,col,0].astype('float')/255.-predictHR[row-margin,col-margin].astype('float')
                 classCount[angle,strength,coherence,pixeltype]+=1
                 classError[angle,strength,coherence,pixeltype]+=pixelerror*pixelerror
+                tslot=int((theta - angle*pi/24)/(pi/24)*1000)
+                lslot=int(lamda*10000)
+                if lslot>=1000:
+                    lslot=999
+                uslot=int(u*1000)
+                if uslot>=1000:
+                    uslot=999
+                patchErrorDist[angle,strength,coherence,pixeltype,tslot,lslot,uslot]+=1
 
     # Scale back to [0,255]
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
