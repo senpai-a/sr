@@ -77,7 +77,7 @@ for img in imagelist:
 print('Fin')
 markCount = 20
 patchSelect=np.zeros((4,markCount,patchSize,patchSize))
-fspa=np.zeros((4,markCount,7))#θ,λ,u,σxx,σxy,σyx,σyy
+fspa=np.zeros((4,markCount,6))#λ,u,σxx,σxy,σyx,σyy
 ffre=np.zeros((4,markCount,20))
 Ffre=np.zeros((4,markCount,patchSize*patchSize*25))
 mk=np.zeros((4,markCount))
@@ -125,7 +125,7 @@ for angle in range(4):
         aaaa, strength, coherence, θ, λ, u = hashkey(patch,24,W)
         gy,gx=np.gradient(patch)
         sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
-        spa=np.concatenate((np.array([θ, λ, u]),sigma.ravel()))
+        spa=np.concatenate((np.array([λ, u]),sigma.ravel()))
         fspa[angle,i,:]=spa
 
         spec = np.zeros((5,5,patchSize,patchSize)).astype(complex)

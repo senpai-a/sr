@@ -114,7 +114,7 @@ for i in range(len(gtlist)):
             selectAngle=(angle//3)%4
             gy,gx=np.gradient(srhpatch)
             sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
-            spa=np.concatenate((np.array([θ, λ, u]),sigma.ravel()))
+            spa=np.concatenate((np.array([λ, u]),sigma.ravel()))
             #extract fre feature
             spec = np.zeros((5,5,patchSize,patchSize)).astype(complex)
             orders = [0.6,0.7,0.8,0.9,1.]
