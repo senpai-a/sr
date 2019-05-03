@@ -40,6 +40,36 @@ def bicubic2x(mat):
             result[:,:,i]=interp(widthgridHR,heightgridHR)
     result=np.clip(result.astype('float'),0.,255.)
     return result
+
+def bicubic0_5x(mat):
+    mch=False
+    if len(mat.shape)==3:
+        ch=mat.shape[2]
+        mch=True
+    if mch:
+        h,w,ch=mat.shape
+    else:
+        h,w=mat.shape
+    heightgridHR = np.linspace(0,h-1,h)
+    widthgridHR = np.linspace(0,w-1,w)
+
+    heightgridLR = np.linspace(0,h-2,h/2)
+    widthgridLR = np.linspace(0,w-2,w/2)
+    heightLR=len(heightgridLR)
+    widthLR=len(widthgridLR)
+    if mch:
+        result = np.zeros((heightLR,widthLR,ch))
+    else:
+        result = np.zeros((heightLR,widthLR))
+    if not mch:        
+        interp=interpolate.interp2d(widthgridHR, heightgridHR, mat, kind='cubic')
+        result=interp(widthgridLR,heightgridLR)
+    else:
+        for i in range(ch):
+            interp=interpolate.interp2d(widthgridHR, heightgridHR, mat[:,:,i], kind='cubic')
+            result[:,:,i]=interp(widthgridLR,heightgridLR)
+    result=np.clip(result.astype('float'),0.,255.)
+    return result
 '''
 from getbicubicargs import getbicubicargs
 args=getbicubicargs()

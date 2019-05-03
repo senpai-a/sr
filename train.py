@@ -14,7 +14,7 @@ from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
-from bicubic import bicubic2x
+from bicubic import bicubic2x,bicubic0_5x
 
 #args = gettrainargs()
 parser_ = argparse.ArgumentParser()
@@ -124,7 +124,10 @@ for image in imagelist:
     if width%2==1:
         width-=1
     grayorigin=grayorigin[0:height,0:width]
-    LR = cv2.resize(grayorigin, (int(width/2),int(height/2)), interpolation=cv2.INTER_CUBIC)
+    if args.cv2:
+        LR = cv2.resize(grayorigin,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
+    else:
+        LR = bicubic0_5x(grayorigin)
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
     if args.linear:

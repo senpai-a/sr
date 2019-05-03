@@ -54,7 +54,11 @@ if h.shape[-1]!=filterSize:
 if args.groundTruth:
     classError = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
     classCount = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
-    patchErrorDist = np.zeros((Qangle,Qstrength,Qcoherence,R*R,1000,1000,1000,200))
+    patchErrorDistAngle = np.zeros((7,1000,200))
+    patchErrorDistStrength = np.zeros((7,1000,200))
+    patchErrorDistCoherence = np.zeros((7,1000,200))
+    classid=[(12,0,0),(11,2,1),(12,2,2),(17,2,0),(17,2,1),(6,2,1)]
+
 
 # Matrix preprocessing
 # Preprocessing normalized Gaussian matrix W for hashkey calculation
@@ -157,7 +161,19 @@ for image in imagelist:
                 uslot=int(u*1000)
                 if uslot>=1000:
                     uslot=999
-                patchErrorDist[angle,strength,coherence,pixeltype,tslot,lslot,uslot]+=1
+                eslot=int((pixelerror+1)*100)
+                if eslot<0:
+                    eslot=0
+                if eslot>199:
+                    eslot=199
+                try:
+                    cid=classid.index((angle,strength,coherence))
+                except Exception as e:
+                    cid=-1
+                if cid!=-1:
+                    patchErrorDistAngle[cid,tslot,eslot]+=1
+                    patchErrorDistStrength[cid,lslot,eslot]+=1
+                    patchErrorDistCoherence[cid,uslot,eslot]+=1
 
     # Scale back to [0,255]
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
@@ -194,6 +210,12 @@ with open('results/'+ args.output + '/classCount.p','wb') as f:
     pickle.dump(classCount,f)
 with open('results/'+ args.output + '/classError.p','wb') as f:
     pickle.dump(classError,f)
+with open('results/'+ args.output + '/error-angle.p','wb') as f:
+    pickle.dump(patchErrorDistAngle,f)
+with open('results/'+ args.output + '/error-strength.p','wb') as f:
+    pickle.dump(patchErrorDistStrength,f)
+with open('results/'+ args.output + '/error-coherence.p','wb') as f:
+    pickle.dump(patchErrorDistCoherence,f)
 
 print('\r', end='')
 print(' ' * 60, end='')
