@@ -10,7 +10,7 @@ from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
-from bicubic import bicubic2x
+from bicubic import bicubic2x,bicubic0_5x
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -111,9 +111,13 @@ for image in imagelist:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        ycrcvorigin=cv2.resize(ycrcv,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
+        if args.cv2:
+            ycrcvorigin=cv2.resize(ycrcv,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
+        else:
+            ycrcvorigin=np.uint8(np.clip(bicubic0_5x(ycrcv),0.,255.))
         cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'LR.png',
             cv2.cvtColor(ycrcvorigin, cv2.COLOR_YCrCb2BGR))
+        
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     grayorigin = ycrcvorigin[:,:,0]

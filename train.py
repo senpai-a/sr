@@ -124,16 +124,16 @@ for image in imagelist:
     if args.cv2:
         LR = cv2.resize(grayorigin,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
     else:
-        LR = bicubic0_5x(grayorigin)
+        LR = np.uint8(np.clip(bicubic0_5x(grayorigin),0.,255.))
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
     if args.linear:
-        upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_LINEAR)
+        upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_LINEAR)
     else:
         if args.cv2:
-            upscaledLR = cv2.resize(grayorigin,(width,height),interpolation=cv2.INTER_CUBIC)
+            upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_CUBIC)
         else:
-            upscaledLR = bicubic2x(grayorigin)
+            upscaledLR = bicubic2x(LR)
     # Calculate A'A, A'b and push them into Q, V
     #height, width = upscaledLR.shape
     operationcount = 0
