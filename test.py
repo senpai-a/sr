@@ -4,7 +4,7 @@ import os
 import pickle
 import sys
 from gaussian2d import gaussian2d
-from gettestargs import gettestargs
+#from gettestargs import gettestargs
 from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
@@ -199,7 +199,7 @@ for image in imagelist:
     if args.cv2:
         result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
     else:
-        result = bicubic2x(ycrcvorigin)
+        result = np.clip(bicubic2x(ycrcvorigin),0.,255.)
 
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'Interp.png',
             cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2BGR))

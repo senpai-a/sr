@@ -38,7 +38,7 @@ def bicubic2x(mat):
         for i in range(ch):
             interp=interpolate.interp2d(widthgridLR, heightgridLR, mat[:,:,i], kind='cubic')
             result[:,:,i]=interp(widthgridHR,heightgridHR)
-    result=np.clip(result.astype('float'),0.,255.)
+    #result=np.clip(result.astype('float'),0.,255.)
     return result
 
 def bicubic0_5x(mat):
@@ -68,7 +68,7 @@ def bicubic0_5x(mat):
         for i in range(ch):
             interp=interpolate.interp2d(widthgridHR, heightgridHR, mat[:,:,i], kind='cubic')
             result[:,:,i]=interp(widthgridLR,heightgridLR)
-    result=np.clip(result.astype('float'),0.,255.)
+    #result=np.clip(result.astype('float'),0.,255.)
     return result
 '''
 from getbicubicargs import getbicubicargs
