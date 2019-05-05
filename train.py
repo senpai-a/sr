@@ -124,7 +124,7 @@ for image in imagelist:
     if args.cv2:
         LR = cv2.resize(grayorigin,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
     else:
-        LR = np.uint8(np.clip(bicubic0_5x(grayorigin),0.,255.))
+        LR = bicubic0_5x(grayorigin)
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
     if args.linear:
@@ -134,6 +134,14 @@ for image in imagelist:
             upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_CUBIC)
         else:
             upscaledLR = bicubic2x(LR)
+    '''print(LR)    
+    cv2.imshow('LR',np.clip(LR,0,1.))
+    cv2.waitKey(0)
+    print(upscaledLR)
+    cv2.imshow('upscaledLR',np.clip(upscaledLR,0,1.))
+    cv2.waitKey(0)
+    cv2.imshow('grayorigin',grayorigin)
+    cv2.waitKey(0)'''
     # Calculate A'A, A'b and push them into Q, V
     #height, width = upscaledLR.shape
     operationcount = 0
@@ -279,10 +287,11 @@ if args.output:
     of=args.output
 with open(of, "wb") as fp:
     pickle.dump(h, fp)
+    '''
 with open("classConut_"+of,"wb") as f:
     pickle.dump(classCount,f)
 with open("coStConut_"+of,"wb") as f:
-    pickle.dump(coStCount,f)
+    pickle.dump(coStCount,f)'''
 
 # Plot the learned filters
 if args.plot:

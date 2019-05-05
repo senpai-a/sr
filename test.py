@@ -71,9 +71,12 @@ if h.shape[-1]!=filterSize:
 if args.groundTruth:
     classError = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
     classCount = np.zeros((Qangle,Qstrength,Qcoherence,R*R))
-    patchErrorDistAngle = np.zeros((7,1000,200))
-    patchErrorDistStrength = np.zeros((7,1000,200))
-    patchErrorDistCoherence = np.zeros((7,1000,200))
+    '''
+    patchErrorDistAngle = np.zeros((7,1000,1000))
+    patchErrorDistStrength = np.zeros((7,1000,1000))
+    patchErrorDistCoherence = np.zeros((7,1000,1000))
+    '''
+    patchErrorDistCent = np.zeros((7,256,1000))
     classid=[(12,0,0),(11,2,1),(12,2,2),(17,2,0),(17,2,1),(6,2,1)]
 
 
@@ -175,26 +178,39 @@ for image in imagelist:
                 pixelerror=ycrcv[row,col,0].astype('float')/255.-predictHR[row-margin,col-margin].astype('float')
                 classCount[angle,strength,coherence,pixeltype]+=1
                 classError[angle,strength,coherence,pixeltype]+=pixelerror*pixelerror
+                '''
                 tslot=int((theta - angle*pi/24)/(pi/24)*1000)
                 lslot=int(lamda*10000)
                 if lslot>=1000:
                     lslot=999
-                uslot=int(u*1000)
+                try:
+                    uslot=int(u*1000)
+                except Exception as e:
+                    continue
                 if uslot>=1000:
-                    uslot=999
-                eslot=int((pixelerror+1)*100)
+                    uslot=999'''
+                eslot=int((pixelerror+.5)*1000)
                 if eslot<0:
                     eslot=0
-                if eslot>199:
-                    eslot=199
+                if eslot>999:
+                    eslot=999
+                    
+                cent=int(upscaledLR[row,col]*255)
+                if cent<0:
+                   cent=0
+                if cent>255:
+                   cent=255
                 try:
                     cid=classid.index((angle,strength,coherence))
                 except Exception as e:
                     cid=-1
                 if cid!=-1:
+                    '''
                     patchErrorDistAngle[cid,tslot,eslot]+=1
                     patchErrorDistStrength[cid,lslot,eslot]+=1
-                    patchErrorDistCoherence[cid,uslot,eslot]+=1
+                    patchErrorDistCoherence[cid,uslot,eslot]+=1'''
+                    patchErrorDistCent[cid,cent,eslot]+=1
+
 
     # Scale back to [0,255]
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
@@ -231,13 +247,15 @@ with open('results/'+ args.output + '/classCount.p','wb') as f:
     pickle.dump(classCount,f)
 with open('results/'+ args.output + '/classError.p','wb') as f:
     pickle.dump(classError,f)
+'''
 with open('results/'+ args.output + '/error-angle.p','wb') as f:
     pickle.dump(patchErrorDistAngle,f)
 with open('results/'+ args.output + '/error-strength.p','wb') as f:
     pickle.dump(patchErrorDistStrength,f)
 with open('results/'+ args.output + '/error-coherence.p','wb') as f:
-    pickle.dump(patchErrorDistCoherence,f)
-
+    pickle.dump(patchErrorDistCoherence,f)'''
+with open('results/'+ args.output + '/error-cent.p','wb') as f:
+    pickle.dump(patchErrorDistCent,f)
 print('\r', end='')
 print(' ' * 60, end='')
 print('\rFinished.')
