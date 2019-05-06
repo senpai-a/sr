@@ -121,24 +121,24 @@ for image in imagelist:
     if width%2==1:
         width-=1
     grayorigin=grayorigin[0:height,0:width]
-    if args.cv2:
+    '''if args.cv2:
         LR = cv2.resize(grayorigin,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
-    else:
-        LR = bicubic0_5x(grayorigin)
+    else:'''
+    LR = bicubic0_5x(grayorigin)
     # Upscale (bilinear interpolation)
     #heightLR, widthLR = LR.shape
-    if args.linear:
+    '''if args.linear:
         upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_LINEAR)
     else:
         if args.cv2:
             upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_CUBIC)
-        else:
-            upscaledLR = bicubic2x(LR)
+        else:'''
+    upscaledLR = bicubic2x(LR)
     '''print(LR)    
-    cv2.imshow('LR',np.clip(LR,0,1.))
+    cv2.imshow('LR',LR)
     cv2.waitKey(0)
     print(upscaledLR)
-    cv2.imshow('upscaledLR',np.clip(upscaledLR,0,1.))
+    cv2.imshow('upscaledLR',upscaledLR)
     cv2.waitKey(0)
     cv2.imshow('grayorigin',grayorigin)
     cv2.waitKey(0)'''
@@ -155,13 +155,14 @@ for image in imagelist:
                 print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
                 sys.stdout.flush()
             operationcount += 1
-            
+             # Get patch
+            patch = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
             # Get gradient block
-            gradientblock = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
+            gradientblock = patch
             # Calculate hashkey
             angle, strength, coherence,theta,lamda,u = hashkey(gradientblock, Qangle, weighting)
 
-            if args.ex2:
+            '''if args.ex2:
                 cocdf=np.zeros(1000)
                 stcdf=np.zeros(2000)
                 with open("cocdf.p","rb") as f:
@@ -170,10 +171,8 @@ for image in imagelist:
                     stcdf=pickle.load(f)
                 theta = (theta - angle*pi/24)/(pi/24)
                 lamda = stcdf[int(lamda*1000)]
-                u = cocdf[int(u*1000)]
-
-            # Get patch
-            patch = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
+                u = cocdf[int(u*1000)]'''
+           
             patch = np.ravel(patch)#flatten by row
             patch = np.matrix(patch)#row         
 
@@ -228,13 +227,6 @@ for image in imagelist:
                 V[angle,strength,coherence,pixeltype] += ATb
     imagecount += 1
 
-# Write Q,V to file
-'''
-with open("q.p", "wb") as fp:
-    pickle.dump(Q, fp)
-with open("v.p", "wb") as fp:
-    pickle.dump(V, fp)
-'''
 if not exQ:
     Qextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize, patchsize*patchsize))
     Vextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize))
@@ -257,6 +249,7 @@ if not exQ:
                         Vextended[newangleslot,strength,coherence,pixeltype] += newV
     Q += Qextended
     V += Vextended
+
 
 # Compute filter h
 print('\nComputing h ...')
@@ -293,6 +286,11 @@ with open("classConut_"+of,"wb") as f:
 with open("coStConut_"+of,"wb") as f:
     pickle.dump(coStCount,f)'''
 
+# Write Q,V to file
+with open('q_'+of, "wb") as fp:
+    pickle.dump(Q, fp)
+with open("v_"+of, "wb") as fp:
+    pickle.dump(V, fp)
 # Plot the learned filters
 if args.plot:
     filterplot(h, R, Qangle, Qstrength, Qcoherence, patchsize)
