@@ -15,6 +15,7 @@ from scipy import interpolate
 from skimage import transform
 from bicubic import bicubic2x,bicubic0_5x
 from numba import njit, prange, jit
+from ls import ls
 
 
 # Calculate A'A, A'b and push them into Q, V
@@ -116,7 +117,7 @@ def rotflipQV(Q,V,P):
     V += Vextended
 
 @jit(parallel=False)
-def resolvefilters(Q,V,h):
+def resolvefilters_cgls(Q,V,h):
     fin=0
     for pixeltype in range(4):
         for angle in range(24):
@@ -126,4 +127,17 @@ def resolvefilters(Q,V,h):
                     sys.stdout.flush()
                     h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype],
                         V[angle,strength,coherence,pixeltype])
+                    fin+=1
+
+@jit(parallel=False)
+def resolvefilters(Q,V,h,λ):
+    fin=0
+    for pixeltype in range(4):
+        for angle in range(24):
+            for strength in range(3):
+                for coherence in range(3):
+                    print('\r',' '*20,'\r',fin,'/864',sep='',end='')
+                    sys.stdout.flush()
+                    h[angle,strength,coherence,pixeltype] = ls(Q[angle,strength,coherence,pixeltype],
+                        V[angle,strength,coherence,pixeltype],1)
                     fin+=1

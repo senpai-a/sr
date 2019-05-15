@@ -146,7 +146,7 @@ with open("v_"+of, "wb") as fp:
 # Compute filter h
 print('\nresolving filters ...')
 sys.stdout.flush()
-resolvefilters(Q,V,h)
+resolvefilters(Q,V,h,1)
 
 # Write filter to file
 

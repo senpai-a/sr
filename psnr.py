@@ -4,7 +4,6 @@ import os
 import pickle
 import sys
 from gaussian2d import gaussian2d
-from gettestargs import gettestargs
 from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
