@@ -1,9 +1,15 @@
 import numpy as np
 from math import atan2, floor, pi
+from numba import njit, prange
+
 
 def hashkey(block, Qangle, W):
     # Calculate gradient
     gy, gx = np.gradient(block)
+    return _hashkey(gx,gy,Qangle,W)
+
+@njit
+def _hashkey(gx,gy,Qangle,W):
     # Transform 2D matrix into 1D array
     gx = gx[1:-1,1:-1].ravel()
     gy = gy[1:-1,1:-1].ravel()
@@ -14,12 +20,8 @@ def hashkey(block, Qangle, W):
     w, v = np.linalg.eig(GTWG)
 
     # Make sure V and D contain only real numbers
-    nonzerow = np.count_nonzero(np.isreal(w))
-    nonzerov = np.count_nonzero(np.isreal(v))
-    if nonzerow != 0:
-        w = np.real(w)
-    if nonzerov != 0:
-        v = np.real(v)
+    w = np.real(w)
+    v = np.real(v)
 
     # Sort w and v according to the descending order of w
     idx = w.argsort()[::-1]

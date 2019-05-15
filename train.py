@@ -14,6 +14,8 @@ from matplotlib import pyplot as plt
 from scipy import interpolate
 from skimage import transform
 from bicubic import bicubic2x,bicubic0_5x
+from numba import njit, prange
+from training import collectQV, collectQVrotflip, rotflipQV, resolvefilters
 
 parser_ = argparse.ArgumentParser()
 parser_.add_argument("-e", "--extended", help="Use Extended Linear Mapping", action="store_true")
@@ -75,10 +77,6 @@ weighting = gaussian2d([gradientsize, gradientsize], 2)
 weighting = np.diag(weighting.ravel())
 
 # Preprocessing permutation matrices P for nearly-free 8x more learning examples
-print('\r', end='')
-print(' ' * 60, end='')
-print('\rPreprocessing permutation matrices P for nearly-free 8x more learning examples ...')
-sys.stdout.flush()
 P = np.zeros((patchsize*patchsize, patchsize*patchsize, 7))
 rotate = np.zeros((patchsize*patchsize, patchsize*patchsize))
 flip = np.zeros((patchsize*patchsize, patchsize*patchsize))
@@ -109,6 +107,8 @@ for image in imagelist:
     print('\r', end='')
     print(' ' * 60, end='')
     print('\rProcessing image ' + str(imagecount) + ' of ' + str(len(imagelist)) + ' (' + image + ')')
+    sys.stdout.flush()
+
     origin = cv2.imread(image)
     # Extract only the luminance in YCbCr
     grayorigin = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)[:,:,0]
@@ -121,176 +121,38 @@ for image in imagelist:
     if width%2==1:
         width-=1
     grayorigin=grayorigin[0:height,0:width]
-    '''if args.cv2:
-        LR = cv2.resize(grayorigin,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
-    else:'''
     LR = bicubic0_5x(grayorigin)
     # Upscale (bilinear interpolation)
-    #heightLR, widthLR = LR.shape
-    '''if args.linear:
-        upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_LINEAR)
-    else:
-        if args.cv2:
-            upscaledLR = cv2.resize(LR,(width,height),interpolation=cv2.INTER_CUBIC)
-        else:'''
     upscaledLR = bicubic2x(LR)
-    '''print(LR)    
-    cv2.imshow('LR',LR)
-    cv2.waitKey(0)
-    print(upscaledLR)
-    cv2.imshow('upscaledLR',upscaledLR)
-    cv2.waitKey(0)
-    cv2.imshow('grayorigin',grayorigin)
-    cv2.waitKey(0)'''
     # Calculate A'A, A'b and push them into Q, V
-    #height, width = upscaledLR.shape
-    operationcount = 0
-    totaloperations = (height-2*margin) * (width-2*margin)
-    for row in range(margin, height-margin):
-        for col in range(margin, width-margin):
-            if round(operationcount*100/totaloperations) != round((operationcount+1)*100/totaloperations):
-                print('\r|', end='')
-                print('#' * round((operationcount+1)*100/totaloperations/2), end='')
-                print(' ' * (50 - round((operationcount+1)*100/totaloperations/2)), end='')
-                print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
-                sys.stdout.flush()
-            operationcount += 1
-             # Get patch
-            patch = upscaledLR[row-patchmargin:row+patchmargin+1, col-patchmargin:col+patchmargin+1]
-            # Get gradient block
-            gradientblock = patch
-            # Calculate hashkey
-            angle, strength, coherence,theta,lamda,u = hashkey(gradientblock, Qangle, weighting)
-
-            '''if args.ex2:
-                cocdf=np.zeros(1000)
-                stcdf=np.zeros(2000)
-                with open("cocdf.p","rb") as f:
-                    cocdf=pickle.load(f)
-                with open("stcdf.p","rb") as f:
-                    stcdf=pickle.load(f)
-                theta = (theta - angle*pi/24)/(pi/24)
-                lamda = stcdf[int(lamda*1000)]
-                u = cocdf[int(u*1000)]'''
-           
-            patch = np.ravel(patch)#flatten by row
-            patch = np.matrix(patch)#row         
-
-            # Get pixel type
-            pixeltype = ((row-margin) % R) * R + ((col-margin) % R)
-
-            classCount[angle,strength,coherence,pixeltype]+=1
-            ui=int(u*1000)
-            li=int(lamda*10000)
-            if ui>1000:
-                ui=1000
-            if li>9999:
-                li=9999
-            coStCount[ui,li]+=1
-
-            # Get corresponding HR pixel
-            pixelHR = grayorigin[row,col]
-            if exQ:
-                for i in range(1, 8):
-                    rot = i % 4
-                    fli = floor(i / 4)
-                    newangleslot = angle
-                    newtheta = theta
-                    if fli == 1:
-                        newangleslot = Qangle-angle-1
-                        newtheta = pi - theta
-                    newangleslot = int(newangleslot-Qangle/2*rot)
-                    while newangleslot < 0:
-                        newangleslot += Qangle
-                    newtheta = theta - rot*pi/2
-                    while newtheta < 0:
-                        newtheta += pi
-                    
-                    patch_=np.zeros(filterSize)
-                    patch_=patch.dot(P[:,:,i-1])
-                    f=np.array([newtheta,lamda,u,1.])                    
-                    patch_=np.concatenate((np.array(patch_),f),axis=None)
-                    patch_=np.matrix(patch_)
-                    ATA=np.dot(patch_.T,patch_)
-                    ATb=np.dot(patch_.T,pixelHR)
-                    ATb=np.array(ATb).ravel()
-                    Q[newangleslot,strength,coherence,pixeltype] += ATA
-                    V[newangleslot,strength,coherence,pixeltype] += ATb
-
-            else:
-                # Compute A'A and A'b                
-                ATA = np.dot(patch.T, patch)
-                ATb = np.dot(patch.T, pixelHR)
-                ATb = np.array(ATb).ravel()
-                # Compute Q and V
-                Q[angle,strength,coherence,pixeltype] += ATA
-                V[angle,strength,coherence,pixeltype] += ATb
+    if exQ:
+        collectQVrotflip(upscaledLR,grayorigin,patchsize,Q,V,weighting,P)
+    else:
+        collectQV(upscaledLR,grayorigin,patchsize,Q,V,weighting)
     imagecount += 1
 
 if not exQ:
-    Qextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize, patchsize*patchsize))
-    Vextended = np.zeros((Qangle, Qstrength, Qcoherence, R*R, patchsize*patchsize))
-    for pixeltype in range(0, R*R):
-        for angle in range(0, Qangle):
-            for strength in range(0, Qstrength):
-                for coherence in range(0, Qcoherence):
-                    for m in range(1, 8):
-                        m1 = m % 4
-                        m2 = floor(m / 4)
-                        newangleslot = angle
-                        if m2 == 1:
-                            newangleslot = Qangle-angle-1
-                        newangleslot = int(newangleslot-Qangle/2*m1)
-                        while newangleslot < 0:
-                            newangleslot += Qangle
-                        newQ = P[:,:,m-1].T.dot(Q[angle,strength,coherence,pixeltype]).dot(P[:,:,m-1])
-                        newV = P[:,:,m-1].T.dot(V[angle,strength,coherence,pixeltype])
-                        Qextended[newangleslot,strength,coherence,pixeltype] += newQ
-                        Vextended[newangleslot,strength,coherence,pixeltype] += newV
-    Q += Qextended
-    V += Vextended
+    rotflipQV(Q,V,P)
 
-
-# Compute filter h
-print('\nComputing h ...')
-sys.stdout.flush()
-operationcount = 0
-totaloperations = R * R * Qangle * Qstrength * Qcoherence
-for pixeltype in range(0, R*R):
-    for angle in range(0, Qangle):
-        for strength in range(0, Qstrength):
-            for coherence in range(0, Qcoherence):
-                if round(operationcount*100/totaloperations) != round((operationcount+1)*100/totaloperations):
-                    print('\r|', end='')
-                    print('#' * round((operationcount+1)*100/totaloperations/2), end='')
-                    print(' ' * (50 - round((operationcount+1)*100/totaloperations/2)), end='')
-                    print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
-                    sys.stdout.flush()
-                operationcount += 1
-                if args.ls:
-                    h[angle,strength,coherence,pixeltype] = ls(Q[angle,strength,coherence,pixeltype],
-                      V[angle,strength,coherence,pixeltype], float(args.l))
-                else:
-                    h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype],
-                      V[angle,strength,coherence,pixeltype])
-
-# Write filter to file
 of="filter.p"
 if args.output:
     of=args.output
-with open(of, "wb") as fp:
-    pickle.dump(h, fp)
-    '''
-with open("classConut_"+of,"wb") as f:
-    pickle.dump(classCount,f)
-with open("coStConut_"+of,"wb") as f:
-    pickle.dump(coStCount,f)'''
-
 # Write Q,V to file
 with open('q_'+of, "wb") as fp:
     pickle.dump(Q, fp)
 with open("v_"+of, "wb") as fp:
     pickle.dump(V, fp)
+
+# Compute filter h
+print('\nresolving filters ...')
+sys.stdout.flush()
+resolvefilters(Q,V,h)
+
+# Write filter to file
+
+with open(of, "wb") as fp:
+    pickle.dump(h, fp)
+
 # Plot the learned filters
 if args.plot:
     filterplot(h, R, Qangle, Qstrength, Qcoherence, patchsize)
