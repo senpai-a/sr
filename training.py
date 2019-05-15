@@ -122,7 +122,7 @@ def resolvefilters(Q,V,h):
         for angle in range(24):
             for strength in range(3):
                 for coherence in range(3):
-                    print('\r',' '*20,'\r',fin,'/864',set='',end='')
+                    print('\r',' '*20,'\r',fin,'/864',sep='',end='')
                     sys.stdout.flush()
                     h[angle,strength,coherence,pixeltype] = cgls(Q[angle,strength,coherence,pixeltype],
                         V[angle,strength,coherence,pixeltype])

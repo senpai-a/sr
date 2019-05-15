@@ -142,8 +142,7 @@ for image in imagelist:
     
     heightHR, widthHR = upscaledLR.shape
     predictHR = np.zeros((heightHR-2*margin, widthHR-2*margin))
-    predict(upscaledLR,margin,predictHR,h,args.groundTruth,exQ,ycrcv,classError,classCount,weighting)
-    
+    predict(upscaledLR,margin,predictHR,h,args.groundTruth,exQ,ycrcv,classError,classCount,weighting)    
 
     # Scale back to [0,255]
     predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
@@ -186,9 +185,9 @@ with open('results/'+ args.output + '/error-angle.p','wb') as f:
 with open('results/'+ args.output + '/error-strength.p','wb') as f:
     pickle.dump(patchErrorDistStrength,f)
 with open('results/'+ args.output + '/error-coherence.p','wb') as f:
-    pickle.dump(patchErrorDistCoherence,f)'''
+    pickle.dump(patchErrorDistCoherence,f)
 with open('results/'+ args.output + '/error-cent.p','wb') as f:
-    pickle.dump(patchErrorDistCent,f)
+    pickle.dump(patchErrorDistCent,f)'''
 print('\r', end='')
 print(' ' * 60, end='')
 print('\rFinished.')
