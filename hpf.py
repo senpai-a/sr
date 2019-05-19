@@ -18,7 +18,7 @@ def hpf(mat,d0=30):
                 h=1/(1+0.414*((d0/d)**(2*order)))
             ret[i,j]=h*spec[i,j]
     ret = fftpack.ifft2(fftpack.ifftshift(ret))
-    ret = np.clip(np.real(ret),0.,255.).astype('uint8')
+    ret = np.uint8(np.clip(np.real(ret),0.,255.))
     return ret
 '''
 import cv2

@@ -22,13 +22,13 @@ def predict(upscaledLR,margin,predictHR,h,gt,exQ,ycrcv,classError,classCount,W):
     operationcount = 0
     totaloperations = (heightHR-2*margin) * (widthHR-2*margin)
     for row in range(margin, heightHR-margin):
+        if round(operationcount*100/totaloperations) != round((operationcount+1)*100/totaloperations):
+            print('\r|', end='')
+            print('#' * round((operationcount+1)*100/totaloperations/2), end='')
+            print(' ' * (50 - round((operationcount+1)*100/totaloperations/2)), end='')
+            print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
+            sys.stdout.flush()
         for col in range(margin, widthHR-margin):
-            if round(operationcount*100/totaloperations) != round((operationcount+1)*100/totaloperations):
-                print('\r|', end='')
-                print('#' * round((operationcount+1)*100/totaloperations/2), end='')
-                print(' ' * (50 - round((operationcount+1)*100/totaloperations/2)), end='')
-                print('|  ' + str(round((operationcount+1)*100/totaloperations)) + '%', end='')
-                sys.stdout.flush()
             operationcount += 1
             # Get patch
             patch = upscaledLR[row-margin:row+margin+1, col-margin:col+margin+1]

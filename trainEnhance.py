@@ -19,7 +19,7 @@ parser.add_argument("-sr", "--sr", help="Specify SR images folder")
 parser.add_argument("-gt", "--gt", help="Specify GT images folder")
 parser.add_argument("-s", "--selector", help="Specify selector file(PCA+8SVM)")
 parser.add_argument("-o", "--output", help="File to save filter")
-parser.add_argument("-ff", "--frefactor", help="Factor for fre SVC, spa SVC uses (1-ff).")
+#parser.add_argument("-ff", "--frefactor", help="Factor for fre SVC, spa SVC uses (1-ff).")
 
 args = parser.parse_args()
 
@@ -28,11 +28,11 @@ filterSize=patchSize*patchSize
 margin = patchSize//2
 W = np.diag(gaussian2d((9,9),2).ravel())
 
-if args.ff:
+'''if args.ff:
     frefactor=float(args.ff)
-else:
+else:    
     frefactor=.3
-spafactor=1-frefactor
+spafactor=1-frefactor'''
 
 srlist=[]
 sl=[]
@@ -49,8 +49,8 @@ for parent, dirnames, filenames in os.walk(args.sr):
             srlist.append(os.path.join(parent, filename))
             sl.append(filename[:-4])
 
-with open(args.s,'rb') as f:
-    (pcaL,svcspa,svcfre)=pickle.load(f)
+with open(args.selector,'rb') as f:
+    (pcaL,svc)=pickle.load(f)
 
 #argmin||Qh-V||
 Q=np.zeros((24,3,3,filterSize,filterSize))
@@ -92,17 +92,20 @@ for i in range(len(gtlist)):
 
     srh=hpf(sr)
     gth=hpf(gt)
+    '''cv2.imshow('srh',srh)
+    cv2.imshow('gth',gth)    
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()'''
     patchi=0
     patchN=(h-2*margin) * (w-2*margin)
-    for row in range(margin,w-margin):
-        for col in range(margin,h-margin):
-            
-            print('\r',imagei,'/',imageN,' images|',
+    for col in range(margin,w-margin):        
+        print('\r',imagei,'/',imageN,' images|',
                 '█'*(patchi*50//patchN),
                 ' '*(50-patchi*50//patchN),'|',
                 end='',sep='')
-            sys.stdout.flush()
-            
+        sys.stdout.flush()
+        for row in range(margin,h-margin):
+            patchi+=1
             if srh[row,col]<=20:
                 continue
 
@@ -122,12 +125,13 @@ for i in range(len(gtlist)):
                 for yi in range(5):
                     spec[xi,yi,:,:]=frft2d(srhpatch,orders[xi],orders[yi])
             fre = zscore(np.absolute(spec).ravel())
-            fre = pcaL[selectAngle].transform(fre)
+            fre = pcaL[selectAngle].transform([fre])
+            ff=np.concatenate((spa,fre),axis=None)
             #select
-            good=frefactor*svcfre[selectAngle].predict(fre)+\
-                spafactor*svcspa[selectAngle].predict(spa)
-
-            if good<.5:
+            '''good=frefactor*svcfre[selectAngle].decision_function(fre)+\
+                spafactor*svcspa[selectAngle].decision_function([spa])'''
+            good=svc[selectAngle].predict([ff])
+            if good==0:
                 continue
             
             A=np.matrix(srhpatch.ravel())
@@ -187,11 +191,11 @@ for angle in range(24):
                 ' '*(50-patchi*50//patchN),'|',
                 end='',sep='')
             sys.stdout.flush()
-            h[angle,strength,coherence] = cgls(Q[angle,strength,coherence],
-                      V[angle,strength,coherence])
+            h[angle,strength,coherence] = ls(Q[angle,strength,coherence],
+                      V[angle,strength,coherence],1)
 
 of='enhanceFilter.bin'
 if args.output:
     of = args.output
 with open(of,'wb') as f:
-    pickle.dump((frefactor,h),f)
+    pickle.dump(h,f)
