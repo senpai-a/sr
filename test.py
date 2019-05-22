@@ -49,7 +49,7 @@ else:
 try:
     os.mkdir('results/'+ args.output)
 except Exception as e:
-    pass#print("\nignoring error:",e)
+    print("ignoring error:",e)
 
 # Calculate the margin
 maxblocksize = max(patchsize, gradientsize)

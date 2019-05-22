@@ -49,14 +49,13 @@ for ff in range(1):
                 for yi in range(5):
                     spec[xi,yi,:,:]=frft2d(patch,orders[xi],orders[yi])
             fre = zscore(np.absolute(spec).ravel())
-            fre = pcaL[selectAngle].transform([fre])
-            ff=np.concatenate((spa,fre),axis=None)
+            fre1 = pcaL[selectAngle].transform([fre])
+            ff=np.concatenate((spa,fre1),axis=None)
             #select            
             m=svc[selectAngle].predict([ff])[0]
             tm=mk[angle,i]
             testn+=1
             if m==tm:
                 accu+=1
-            print('\raccu=',accu/testn,end='')
+            print('\raccu=',accu/testn,end='                                     ')
             sys.stdout.flush()
-    print('')

@@ -156,6 +156,7 @@ for angle in range(4):
         sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
         spa=np.concatenate((np.array([λ, u]),sigma.ravel()))
         fspa[angle,i,:]=spa
+        #fspa[angle,i,:]=spa
 
         spec = np.zeros((5,5,patchSize,patchSize)).astype(complex)
         orders = [0.6,0.7,0.8,0.9,1.]
@@ -171,7 +172,10 @@ fff=np.concatenate((fspa,ffre),axis=2)
 print('training svc...')
 svcspa=[svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear')]
 svcfre=[svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear')]
-svc=[svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear'),svm.SVC(kernel='linear')]
+svc=[svm.SVC(kernel='linear',C=100),
+     svm.SVC(kernel='linear',C=100),
+     svm.SVC(kernel='linear',C=100),
+     svm.SVC(kernel='linear',C=100)]
 for angle in range(4):
     '''
     print('\r',angle*2+1,'/12 trained.',end='',sep='')
@@ -181,9 +185,11 @@ for angle in range(4):
     print('\r',angle*2+2,'/12 trained.',end='',sep='')
     sys.stdout.flush()
     svcfre[angle].fit(ffre[angle,:,:],mk[angle,:])
-'''
+
     print('\r',angle+1,'/4 trained.',end='',sep='')
     sys.stdout.flush()
+    svc[angle].fit(fff[angle,:,:],mk[angle,:])'''
+    print('\r',angle+1,'/4 trained.',end='',sep='')
     svc[angle].fit(fff[angle,:,:],mk[angle,:])
 
 print('Dumping SVMs')

@@ -1,11 +1,11 @@
 import numpy as np
 from math import pi
-from numba import jit
+from numba import jit,njit
 
 lastN=None
 lastE=None
 
-@jit
+@jit(parallel=True)
 def make_E(N,p):
     d2 = np.array([1,-2,1])
     d_p = 1
@@ -70,7 +70,7 @@ def get_E(N,p):
 
     return lastE
 
-@jit
+@jit(parallel=True)
 #f:离散信号 a:阶数 p:近似阶数，默认len(f)/2
 def disfrft(f,a,p=-1):
     N=len(f)
@@ -91,7 +91,7 @@ def disfrft(f,a,p=-1):
     ret[shft]=E.dot(pt1*pt2)
     return ret
 
-@jit
+@jit(parallel=True)
 def frft2d(mat,ax,ay):
     m,n=mat.shape
     xspec=np.zeros((m,n)).astype(complex)
