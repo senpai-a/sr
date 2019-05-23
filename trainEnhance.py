@@ -13,6 +13,7 @@ from sklearn import svm
 from sklearn.decomposition import PCA
 from cgls import cgls
 from ls import ls
+from trainEnhanceFunc import stackQV
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-sr", "--sr", help="Specify SR images folder")
@@ -20,6 +21,7 @@ parser.add_argument("-gt", "--gt", help="Specify GT images folder")
 parser.add_argument("-s", "--selector", help="Specify selector file(PCA+4SVM)")
 parser.add_argument("-o", "--output", help="File to save filter")
 parser.add_argument('-qv','--QV',help="Specify QV file")
+parser.add_argument('-c','--count',help="Specify count file")
 #parser.add_argument("-ff", "--frefactor", help="Factor for fre SVC, spa SVC uses (1-ff).")
 
 args = parser.parse_args()
@@ -37,13 +39,17 @@ spafactor=1-frefactor'''
 Q=np.zeros((24,3,3,filterSize,filterSize))
 V=np.zeros((24,3,3,filterSize))
 h=np.zeros((24,3,3,filterSize))
-with open(args.selector,'rb') as f:
-        (pcaL,svc)=pickle.load(f)
+count=np.zeros((24,3,3,filterSize))
         
 if args.QV:
     with open(args.QV,'rb') as f:
         (Q,V)=pickle.load(f)
-else:      
+    if args.count:
+        with open(args.count,'rb') as f:
+            count=pickle.load(f)
+if args.gt and args.sr:
+    with open(args.selector,'rb') as f:
+        (pcaL,svc)=pickle.load(f)
     srlist=[]
     sl=[]
     gtlist=[]
@@ -78,13 +84,13 @@ else:
         
         gt=cv2.cvtColor(cv2.imread(gtlist[i]),cv2.COLOR_BGR2YCrCb)[:,:,0]
         sr=cv2.cvtColor(cv2.imread(srlist[j]),cv2.COLOR_BGR2YCrCb)[:,:,0]
-        (h,w)=gt.shape
+        (height,width)=gt.shape
         if gt.shape!=sr.shape:
-            if h%2==1:
-                h-=1
-            if w%2==1:
-                w-=1
-            gt=gt[0:h,0:w]
+            if height%2==1:
+                height-=1
+            if width%2==1:
+                width-=1
+            gt=gt[0:height,0:width]
         
         if gt.shape!=sr.shape:
             print('dimensions do not match on image:',gtlist[i],srlist[i])
@@ -97,49 +103,7 @@ else:
         cv2.imshow('gth',gth)    
         cv2.waitKey(0)
         cv2.destroyAllWindows()'''
-        patchi=0
-        patchN=(h-2*margin) * (w-2*margin)
-        for col in range(margin,w-margin):        
-            print('\r',imagei,'/',imageN,' images|',
-                    '█'*(patchi*50//patchN),
-                    ' '*(50-patchi*50//patchN),'|',
-                    end='',sep='')
-            sys.stdout.flush()
-            for row in range(margin,h-margin):
-                patchi+=1
-                if srh[row,col]<=20:
-                    continue
-
-                srhpatch=srh[row-margin:row+margin+1,col-margin:col+margin+1]
-                gthpixel=gth[row,col]
-
-                #extract spa feature
-                angle, strength, coherence, θ,λ,u = hashkey(srhpatch,24,W)
-                selectAngle=(angle//3)%4
-                #gy,gx=np.gradient(srhpatch)
-                #sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
-                #spa=np.concatenate((np.array([λ, u]),sigma.ravel()))
-                #extract fre feature
-                spec = np.zeros((5,5,patchSize,patchSize)).astype(complex)
-                orders = [0.6,0.7,0.8,0.9,1.]
-                for xi in range(5):
-                    for yi in range(5):
-                        spec[xi,yi,:,:]=frft2d(srhpatch,orders[xi],orders[yi])
-                fre = zscore(np.absolute(spec).ravel())
-                fre = pcaL[selectAngle].transform([fre])
-                ff=np.concatenate((np.array([λ, u]),fre),axis=None)
-                #select
-                '''good=frefactor*svcfre[selectAngle].decision_function(fre)+\
-                    spafactor*svcspa[selectAngle].decision_function([spa])'''
-                good=svc[selectAngle].predict([ff])
-                if good==0:
-                    continue
-                
-                A=np.matrix(srhpatch.ravel())
-                ATA=A.T.dot(A)
-                ATb=np.array(A.T.dot(gthpixel)).ravel()
-                Q[angle,strength,coherence]+=ATA
-                V[angle,strength,coherence]+=ATb
+        stackQV(Q,V,count,srh,gth,margin,width,height,imagei,imageN,patchSize,W,pcaL,svc)
 
     print('fliping samples...')
     sys.stdout.flush()
@@ -185,19 +149,33 @@ if args.output:
     of = args.output
 with open(of+"_QV",'wb') as f:
     pickle.dump((Q,V),f)
+with open(of+'_count','wb') as f:
+    pickle.dump(count,f)
 print('resolving filters...')
 processi=0
 processN=24*3*3
 sys.stdout.flush()
+illsample=0
 for angle in range(24):
     for strength in range(3):
         for coherence in range(3):
             processi+=1
             print('\r',processi,'/',processN,end='')
             sys.stdout.flush()
-            h[angle,strength,coherence] = ls(Q[angle,strength,coherence],\
-                V[angle,strength,coherence],1)
-
-
+            if args.count or (args.sr and args.gt):
+                if count[angle,strength,coherence]<1000:
+                    h[angle,strength,coherence,60]=1
+                    illsample+=1
+                else:
+                    h[angle,strength,coherence] = ls(Q[angle,strength,coherence],\
+                        V[angle,strength,coherence],1)
+            else:
+                if np.sum(V[angle,strength,coherence])<100000*1000:
+                    h[angle,strength,coherence,60]=1
+                    illsample+=1
+                else:
+                    h[angle,strength,coherence] = ls(Q[angle,strength,coherence],\
+                        V[angle,strength,coherence],1)
+print("\nclasses lack of sample:",illsample)
 with open(of,'wb') as f:
     pickle.dump(h,f)

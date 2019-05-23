@@ -61,4 +61,4 @@ for image in imagelist:
     cv2.imwrite('results/'+ args.output + '/' +\
         os.path.splitext(os.path.basename(image))[0] + '.png',result)
     cv2.imwrite('results/'+ args.output + '/' +\
-        os.path.splitext(os.path.basename(image))[0] + 'mask.png',mask)
+        os.path.splitext(os.path.basename(image))[0] + 'mask.png',mask.astype('uint8'))

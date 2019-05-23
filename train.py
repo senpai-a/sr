@@ -12,6 +12,7 @@ from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
+from scipy.misc import imresize
 from skimage import transform
 from bicubic import bicubic2x,bicubic0_5x
 from numba import njit, prange
@@ -27,7 +28,7 @@ parser_.add_argument("-p", "--plot", help="Plot the learned filters", action="st
 parser_.add_argument("-li", "--linear", help="Use bilinear for init",action="store_true")
 parser_.add_argument("-ls", "--ls", help="Use normalized least square with normalization factor lambda -l",action="store_true")
 parser_.add_argument("-l", "--l", help="Normalization factor lambda")
-parser_.add_argument("-ex2", "--ex2", help="Use normalized features for ExLM",action="store_true")
+parser_.add_argument("-ex2", "--ex2", help="ExLM",action="store_true")
 parser_.add_argument("-cv2", "--cv2", help="Use cv2 interpolation",action="store_true")
 args = parser_.parse_args()
 #print(args)
@@ -60,8 +61,8 @@ Q = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize, filterSize))
 V = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
 h = np.zeros((Qangle, Qstrength, Qcoherence, R*R, filterSize))
 
-classCount = np.zeros((Qangle, Qstrength, Qcoherence, R*R))
-coStCount = np.zeros((1001,10000))#coherence 0-1 strength 0-0.1
+#classCount = np.zeros((Qangle, Qstrength, Qcoherence, R*R))
+#coStCount = np.zeros((1001,10000))#coherence 0-1 strength 0-0.1
 
 # Read Q,V from file
 if args.qmatrix:
@@ -113,18 +114,29 @@ for image in imagelist:
     # Extract only the luminance in YCbCr
     grayorigin = cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)[:,:,0]
     # Normalized to [0,1]
-    grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
+    #grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
+    grayorigin=grayorigin.astype(float)/255.
     # Downscale (bicubic interpolation)
     height, width = grayorigin.shape
     if height%2==1:
         height-=1
     if width%2==1:
         width-=1
-    grayorigin=grayorigin[0:height,0:width]
-    LR = bicubic0_5x(grayorigin)
+    grayorigin=grayorigin[0:height,0:width]#.astype(float)/255.
+    #LR = bicubic0_5x(grayorigin)
+    LR = imresize(grayorigin,1/2,interp='bicubic').astype(float)/255.
     # Upscale (bilinear interpolation)
-    upscaledLR = bicubic2x(LR)
+    #upscaledLR = bicubic2x(LR)
+    upscaledLR=imresize(LR,200,interp='bicubic').astype(float)/255.
     # Calculate A'A, A'b and push them into Q, V
+    '''
+    cv2.imshow('GT',grayorigin)
+    cv2.imshow('upscaledLR',upscaledLR)
+    print('GT',grayorigin)
+    print('upscaledLR',upscaledLR)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    '''
     if exQ:
         collectQVrotflip(upscaledLR,grayorigin,patchsize,Q,V,weighting,P)
     else:

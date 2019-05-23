@@ -9,6 +9,7 @@ from hashkey import hashkey
 from math import floor, pi
 from matplotlib import pyplot as plt
 from scipy import interpolate
+from scipy.misc import imresize
 from skimage import transform
 from bicubic import bicubic2x,bicubic0_5x
 import argparse
@@ -76,10 +77,10 @@ if args.groundTruth:
     patchErrorDistAngle = np.zeros((7,1000,1000))
     patchErrorDistStrength = np.zeros((7,1000,1000))
     patchErrorDistCoherence = np.zeros((7,1000,1000))
-    '''
+    
     patchErrorDistCent = np.zeros((7,256,1000))
     classid=[(12,0,0),(11,2,1),(12,2,2),(17,2,0),(17,2,1),(6,2,1)]
-
+    '''
 
 # Matrix preprocessing
 # Preprocessing normalized Gaussian matrix W for hashkey calculation
@@ -115,29 +116,21 @@ for image in imagelist:
             width-=1
         ycrcv = ycrcv[0:height,0:width,:]   
         ycrcvorigin=np.zeros((int(height/2),int(width/2),3))
-        if args.cv2:
-            ycrcvorigin=cv2.resize(ycrcv,(int(width/2),int(height/2)),interpolation=cv2.INTER_CUBIC)
-        else:
-            ycrcvorigin=np.uint8(np.clip(bicubic0_5x(ycrcv),0.,255.))
+        ycrcvorigin=imresize(ycrcv,1/2,interp='bicubic')
         cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'LR.png',
-            cv2.cvtColor(ycrcvorigin, cv2.COLOR_YCrCb2BGR))
-        
+            cv2.cvtColor(ycrcvorigin, cv2.COLOR_YCrCb2BGR))        
     else:
         ycrcvorigin=cv2.cvtColor(origin, cv2.COLOR_BGR2YCrCb)
     grayorigin = ycrcvorigin[:,:,0]
 
+    '''
     # Normalized to [0,1]
     grayorigin = cv2.normalize(grayorigin.astype('float'), None, grayorigin.min()/255, grayorigin.max()/255, cv2.NORM_MINMAX)
-    
+    '''
+    grayorigin=grayorigin.astype(float)/255.
     # Upscale (bilinear interpolation)
     heightLR, widthLR = grayorigin.shape
-    if args.linear:
-        upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_LINEAR)
-    else:
-        if args.cv2:
-            upscaledLR = cv2.resize(grayorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
-        else:
-            upscaledLR = bicubic2x(grayorigin)
+    upscaledLR = imresize(grayorigin,200,interp='bicubic').astype(float)/255.
     # Calculate predictHR pixels
     
     heightHR, widthHR = upscaledLR.shape
@@ -145,13 +138,21 @@ for image in imagelist:
     predict(upscaledLR,margin,predictHR,h,args.groundTruth,exQ,ycrcv,classError,classCount,weighting)    
 
     # Scale back to [0,255]
-    predictHR = np.clip(predictHR.astype('float') * 255., 0., 255.)
+    predictHR = np.uint8(np.clip(predictHR.astype('float')*255., 0., 255.))
+    '''
+    cv2.imshow('LR',grayorigin)
+    cv2.imshow('upscaledLR',upscaledLR)
+    cv2.imshow('SR',predictHR)
+    print('LR',grayorigin)
+    print('upscaledLR',upscaledLR)
+    print('SR',predictHR)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    '''
     # Bilinear interpolation on CbCr field
     result = np.zeros((heightHR, widthHR, 3))
-    if args.cv2:
-        result = cv2.resize(ycrcvorigin,(widthLR*2,heightLR*2),interpolation=cv2.INTER_CUBIC)
-    else:
-        result = np.clip(bicubic2x(ycrcvorigin),0.,255.)
+    result = imresize(ycrcvorigin,200,interp='bicubic')
 
     cv2.imwrite('results/'+ args.output + '/' + os.path.splitext(os.path.basename(image))[0] + 'Interp.png',
             cv2.cvtColor(np.uint8(result), cv2.COLOR_YCrCb2BGR))
