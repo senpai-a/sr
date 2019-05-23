@@ -14,6 +14,7 @@ from sklearn.decomposition import PCA
 from cgls import cgls
 from ls import ls
 from numba import jit,prange
+from scipy.misc import imresize
 
 @jit(parallel=True)
 def stackQV(Q,V,count,srh,gth,margin,w,h,imagei,imageN,patchSize,W,pcaL,svc):
@@ -27,7 +28,7 @@ def stackQV(Q,V,count,srh,gth,margin,w,h,imagei,imageN,patchSize,W,pcaL,svc):
         sys.stdout.flush()
         patchi+=h-2*margin
         for row in range(margin,h-margin):
-            if srh[row,col]<=20:
+            if srh[row,col]<=20/255:
                 continue
             srhpatch=srh[row-margin:row+margin+1,col-margin:col+margin+1]
             gthpixel=gth[row,col]
@@ -52,7 +53,11 @@ def stackQV(Q,V,count,srh,gth,margin,w,h,imagei,imageN,patchSize,W,pcaL,svc):
             good=svc[selectAngle].predict([ff])
             if good==0:
                 continue
-
+            '''
+            cv2.imshow('patch',imresize(srhpatch,500,interp='nearest'))
+            print('patch',srhpatch)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()'''
             A=np.matrix(srhpatch.ravel())
             ATA=A.T.dot(A)
             ATb=np.array(A.T.dot(gthpixel)).ravel()

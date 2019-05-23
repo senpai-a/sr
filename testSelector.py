@@ -36,7 +36,7 @@ for ff in range(1):
     #print('frefactor=',frefactor)
     for angle in range(4):
         for i in range(markCount):
-            patch=patchSelect[angle,i,:,:]
+            patch=patchSelect[angle,i,:,:]/255.
             aaa, strength, coherence, θ,λ,u = hashkey(patch,24,W)
             selectAngle=(aaa//3)%4
             gy,gx=np.gradient(patch)
@@ -50,7 +50,7 @@ for ff in range(1):
                     spec[xi,yi,:,:]=frft2d(patch,orders[xi],orders[yi])
             fre = zscore(np.absolute(spec).ravel())
             fre1 = pcaL[selectAngle].transform([fre])
-            ff=np.concatenate((spa,fre1),axis=None)
+            ff=np.concatenate((np.array([λ, u]),fre1),axis=None)
             #select            
             m=svc[selectAngle].predict([ff])[0]
             tm=mk[angle,i]

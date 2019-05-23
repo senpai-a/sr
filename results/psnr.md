@@ -31,5 +31,6 @@ training set|testing set|psnr:RAISR|psnr:ExLM
 ---|---|---|---
 bicubic|Set5|35.6730
 bicubic|Set14|33.7103
-t91|Set5|36.0603|-
-t91|Set14|33.9901|-
+t91|Set5|36.0603|36.0455
+t91|Set14|33.9901|33.9777
+g100|Set5|36.0700|36.0520

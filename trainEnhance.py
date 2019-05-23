@@ -97,14 +97,18 @@ if args.gt and args.sr:
             print(gt.shape,sr.shape)
             continue
 
-        srh=hpf(sr)
-        gth=hpf(gt)
-        '''cv2.imshow('srh',srh)
-        cv2.imshow('gth',gth)    
+        srh=hpf(sr).astype(float)/255.
+        gth=hpf(gt).astype(float)/255.
+        '''
+        cv2.imshow('srh',srh)
+        cv2.imshow('gth',gth) 
+        print('srh',srh)   
+        print('gth',gth)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()'''
+        cv2.destroyAllWindows()
+        '''
         stackQV(Q,V,count,srh,gth,margin,width,height,imagei,imageN,patchSize,W,pcaL,svc)
-
+    print('count',count)
     print('fliping samples...')
     sys.stdout.flush()
 
@@ -163,14 +167,14 @@ for angle in range(24):
             print('\r',processi,'/',processN,end='')
             sys.stdout.flush()
             if args.count or (args.sr and args.gt):
-                if count[angle,strength,coherence]<1000:
+                if count[angle,strength,coherence]<10000:
                     h[angle,strength,coherence,60]=1
                     illsample+=1
                 else:
                     h[angle,strength,coherence] = ls(Q[angle,strength,coherence],\
                         V[angle,strength,coherence],1)
             else:
-                if np.sum(V[angle,strength,coherence])<100000*1000:
+                if np.sum(V[angle,strength,coherence])<1000:
                     h[angle,strength,coherence,60]=1
                     illsample+=1
                 else:

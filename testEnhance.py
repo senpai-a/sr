@@ -56,7 +56,7 @@ for image in imagelist:
     enhance(srh,ehh,mask,width,height,margin,pcaL,svc,h,imagei,imageN,patchSize,W)
 
     result=origin
-    result[:,:,0]=np.uint8(np.clip(srl+ehh,0.,255.))    
+    result[:,:,0]=np.uint8(np.clip(srl+ehh*255.,0.,255.))    
     result=cv2.cvtColor(result,cv2.COLOR_YCrCb2BGR)
     cv2.imwrite('results/'+ args.output + '/' +\
         os.path.splitext(os.path.basename(image))[0] + '.png',result)

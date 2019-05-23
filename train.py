@@ -16,7 +16,7 @@ from scipy.misc import imresize
 from skimage import transform
 from bicubic import bicubic2x,bicubic0_5x
 from numba import njit, prange
-from training import collectQV, collectQVrotflip, rotflipQV, resolvefilters
+from training import collectQV, collectQVrotflip, rotflipQV, resolvefilters, resolvefilters_cgls
 
 parser_ = argparse.ArgumentParser()
 parser_.add_argument("-e", "--extended", help="Use Extended Linear Mapping", action="store_true")
@@ -158,7 +158,8 @@ with open("v_"+of, "wb") as fp:
 # Compute filter h
 print('\nresolving filters ...')
 sys.stdout.flush()
-resolvefilters(Q,V,h,1)
+#resolvefilters(Q,V,h,1)
+resolvefilters_cgls(Q,V,h)
 
 # Write filter to file
 

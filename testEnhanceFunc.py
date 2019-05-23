@@ -31,7 +31,7 @@ def enhance(srh,ehh,mask,width,height,margin,pcaL,svc,h,imagei,imageN,patchSize,
             
             srhpatch=srh[row-margin:row+margin+1,col-margin:col+margin+1]
             #extract spa feature
-            angle, strength, coherence, θ,λ,u = hashkey(srhpatch,24,W)
+            angle, strength, coherence, θ,λ,u = hashkey(srhpatch/255.,24,W)
             selectAngle=(angle//3)%4
             #gy,gx=np.gradient(srhpatch)
             #sigma=np.cov(np.matrix([gx[1:-1,1:-1].ravel(),gy[1:-1,1:-1].ravel()]))
@@ -50,10 +50,10 @@ def enhance(srh,ehh,mask,width,height,margin,pcaL,svc,h,imagei,imageN,patchSize,
             if good==0:
                 continue
             #set result
-            srhpatchL=srhpatch.ravel()
+            srhpatchL=srhpatch.ravel()/255.
             esti=srhpatchL.dot(h[angle,strength,coherence])
             ehh[row,col]=esti
-            if abs(h[angle,strength,coherence,60]-1)<0.0001:
+            if abs(h[angle,strength,coherence,60]-1)<0.00001:
                 mask[row,col]=128
             else:
                 mask[row,col]=255
